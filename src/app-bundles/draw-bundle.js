@@ -60,6 +60,9 @@ export default {
 
       draw.on("drawend", (e) => {
         console.log("polygon:", e.feature.getGeometry().getCoordinates());
+        const coords = e.feature.getGeometry().getCoordinates()[0];
+        const bbox = coords.map((coord) => `${coord[0]},${coord[1]}`).join(",");
+        store.doNsiAddStructures(bbox);
       });
       dispatch({ type: actions.INITIALIZED, payload: { layer: polyLayer } });
     };

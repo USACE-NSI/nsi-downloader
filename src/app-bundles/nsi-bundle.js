@@ -16,7 +16,7 @@ export default {
   getReducer: () => {
     const initialState = { _shouldInit: false, layer: null };
     return (state = initialState, { type, payload }) => {
-      //console.log(type, payload);
+      console.log(type, payload);
       switch (type) {
         case mapActions.INITIALIZED:
           return { ...state, ...{ _shouldInit: true } };
@@ -32,13 +32,12 @@ export default {
     return state.nsi.layer;
   },
   doNsiInitialize: () => {
-    return async ({ store, dispatch }) => {
+    return ({ store, dispatch }) => {
       dispatch({
         type: actions.INITIALIZED_START,
         payload: { _shouldInit: false },
       });
       const map = store.selectMapMap();
-      const geojson = await GetNSI();
       const layerStyle = new Style({
         image: new CircleStyle({
           radius: 3,
@@ -46,15 +45,24 @@ export default {
           stroke: new Stroke({ color: "blue", width: 3 }),
         }),
       });
-      const vectorSource = new VectorSource({
-        features: new GeoJSON().readFeatures(geojson),
-      });
+      // const geojson = await GetNSI();
+      // const vectorSource = new VectorSource({
+      //   features: new GeoJSON().readFeatures(geojson),
+      // });
       const vectorLayer = new VectorLayer({
-        source: vectorSource,
+        source: new VectorSource(),
         style: layerStyle,
       });
       map.addLayer(vectorLayer);
       dispatch({ type: actions.INITIALIZED, payload: { layer: vectorLayer } });
+    };
+  },
+  doNsiAddStructures: (bbox) => {
+    return async ({ store, dispatch }) => {
+      const layer = store.selectNsiLayer();
+      const source = layer.getSource();
+      const geojson = await GetNSI(`structures?bbox=${bbox}`);
+      source.addFeatures(new GeoJSON().readFeatures(geojson));
     };
   },
   reactNsiShouldInit: (state) => {
@@ -62,9 +70,8 @@ export default {
   },
 };
 
-async function GetNSI() {
-  const url =
-    "api/structures?bbox=-81.58418,30.25165,-81.58161,30.26939,-81.55898,30.26939,-81.55281,30.24998,-81.58418,30.25165";
+async function GetNSI(endpoint) {
+  const url = `api/${endpoint}`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`HTTP ${response.status} - ${response.statusText}`);
@@ -72,3 +79,5 @@ async function GetNSI() {
   const geojson = await response.json();
   return geojson;
 }
+
+// structures?bbox=-81.58418,30.25165,-81.58161,30.26939,-81.55898,30.26939,-81.55281,30.24998,-81.58418,30.25165
