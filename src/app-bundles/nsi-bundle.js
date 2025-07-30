@@ -4,6 +4,8 @@ import VectorSource from "ol/source/Vector.js";
 import CircleStyle from "ol/style/Circle.js";
 import Stroke from "ol/style/Stroke.js";
 import Style from "ol/style/Style.js";
+import Fill from "ol/style/Fill.js";
+
 import { actions as mapActions } from "./map-bundle.js";
 
 const actions = {
@@ -40,9 +42,13 @@ export default {
       const map = store.selectMapMap();
       const layerStyle = new Style({
         image: new CircleStyle({
-          radius: 3,
-          fill: null,
-          stroke: new Stroke({ color: "blue", width: 3 }),
+          radius: 6,
+          stroke: new Stroke({
+            color: "#fff",
+          }),
+          fill: new Fill({
+            color: "#3399CC",
+          }),
         }),
       });
       // const geojson = await GetNSI();
