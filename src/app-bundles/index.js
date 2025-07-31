@@ -13,6 +13,6 @@ export default composeBundles(
   testBundle,
   mapBundle,
   //zebraBundle,
-  nsiBundle,
-  drawBundle
+  drawBundle,
+  nsiBundle
 );
