@@ -2,7 +2,7 @@ import Map from "ol/Map.js";
 import View from "ol/View.js";
 import TileLayer from "ol/layer/Tile.js";
 import OSM from "ol/source/OSM.js";
-import { useGeographic } from "ol/proj";
+import { useGeographic, fromLonLat } from "ol/proj";
 
 const actions = { INITIALIZED: "MAP_INITIALIZED" };
 
@@ -33,8 +33,8 @@ export default {
           ],
           target: target,
           view: new View({
-            center: [0, 0],
-            zoom: 2,
+            center: fromLonLat([-122.4194, 37.7749]),
+            zoom: 14,
           }),
         });
         useGeographic(); // NSI is in EPSG 4326

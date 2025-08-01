@@ -1,12 +1,9 @@
 import GeoJSON from "ol/format/GeoJSON.js";
 import VectorLayer from "ol/layer/Vector.js";
 import VectorSource from "ol/source/Vector.js";
-import CircleStyle from "ol/style/Circle.js";
-import Stroke from "ol/style/Stroke.js";
-import Style from "ol/style/Style.js";
-import Fill from "ol/style/Fill.js";
 
 import { actions as mapActions } from "./map-bundle.js";
+import { nsiStyle } from "../styles/nsi-styles.js";
 
 const actions = {
   INITIALIZED_START: "NSI_INITIALIZED_START",
@@ -40,21 +37,7 @@ export default {
         payload: { _shouldInit: false },
       });
       const map = store.selectMapMap();
-      const layerStyle = new Style({
-        image: new CircleStyle({
-          radius: 6,
-          stroke: new Stroke({
-            color: "#fff",
-          }),
-          fill: new Fill({
-            color: "#3399CC",
-          }),
-        }),
-      });
-      // const geojson = await GetNSI();
-      // const vectorSource = new VectorSource({
-      //   features: new GeoJSON().readFeatures(geojson),
-      // });
+      const layerStyle = nsiStyle;
       const vectorLayer = new VectorLayer({
         source: new VectorSource(),
         style: layerStyle,
