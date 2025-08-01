@@ -6,6 +6,7 @@ import mapBundle from "./map-bundle.js";
 import zebraBundle from "./zebra-bundle.js";
 import nsiBundle from "./nsi-bundle.js";
 import drawBundle from "./draw-bundle.js";
+import clusterBundle from "./cluster-bundle.js";
 
 export default composeBundles(
   createUrlBundle(),
@@ -14,5 +15,6 @@ export default composeBundles(
   mapBundle,
   //zebraBundle,
   drawBundle,
-  nsiBundle
+  nsiBundle,
+  clusterBundle
 );

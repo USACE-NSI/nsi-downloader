@@ -1,11 +1,9 @@
 import GeoJSON from "ol/format/GeoJSON.js";
-import VectorLayer from "ol/layer/Vector.js";
 import VectorSource from "ol/source/Vector.js";
 
 import { actions as mapActions } from "./map-bundle.js";
-import { nsiStyle } from "../styles/nsi-styles.js";
 
-const actions = {
+export const actions = {
   INITIALIZED_START: "NSI_INITIALIZED_START",
   INITIALIZED: "NSI_INITIALIZED",
 };
@@ -13,7 +11,7 @@ const actions = {
 export default {
   name: "nsi",
   getReducer: () => {
-    const initialState = { _shouldInit: false, layer: null };
+    const initialState = { _shouldInit: false, source: null };
     return (state = initialState, { type, payload }) => {
       console.log(type, payload);
       switch (type) {
@@ -27,29 +25,24 @@ export default {
       }
     };
   },
-  selectNsiLayer: (state) => {
-    return state.nsi.layer;
+  selectNsiSource: (state) => {
+    return state.nsi.source;
   },
   doNsiInitialize: () => {
-    return ({ store, dispatch }) => {
+    return ({ dispatch }) => {
       dispatch({
         type: actions.INITIALIZED_START,
         payload: { _shouldInit: false },
       });
-      const map = store.selectMapMap();
-      const layerStyle = nsiStyle;
-      const vectorLayer = new VectorLayer({
-        source: new VectorSource(),
-        style: layerStyle,
+      dispatch({
+        type: actions.INITIALIZED,
+        payload: { source: new VectorSource() },
       });
-      map.addLayer(vectorLayer);
-      dispatch({ type: actions.INITIALIZED, payload: { layer: vectorLayer } });
     };
   },
   doNsiAddStructures: (bbox) => {
-    return async ({ store, dispatch }) => {
-      const layer = store.selectNsiLayer();
-      const source = layer.getSource();
+    return async ({ store }) => {
+      const source = store.selectNsiSource();
       const geojson = await GetNSI(`structures?bbox=${bbox}`);
       source.addFeatures(new GeoJSON().readFeatures(geojson));
     };
@@ -59,7 +52,7 @@ export default {
   },
 };
 
-async function GetNSI(endpoint) {
+export async function GetNSI(endpoint) {
   const url = `api/${endpoint}`;
   const response = await fetch(url);
   if (!response.ok) {
