@@ -20,23 +20,29 @@ const styleCache = {};
 
 export function nsiStyle(feature) {
   const members = feature.get("features");
-  console.log(members);
   const domType = majorityType(members);
   const color = COLORS[domType] || "#000000";
 
   let radius = 10;
   if (members.length > 1) {
-    radius = 20;
+    radius = Math.min(10 + members.length, 30);
   }
 
-  if (!styleCache[color]) {
-    styleCache[color] = new Style({
+  const styleKey = `${color}_${radius}_${members.length}`;
+  if (!styleCache[styleKey]) {
+    styleCache[styleKey] = new Style({
       image: new CircleStyle({
         radius: radius,
         fill: new Fill({ color: color }),
         stroke: new Stroke({ color: "#fff", width: 1 }),
       }),
+      text: new Text({
+        text: members.length.toString(),
+        font: "12px sans-serif",
+        fill: new Fill({ color: "#fff" }),
+        stroke: new Stroke({ color: "#000", width: 2 }),
+      }),
     });
   }
-  return styleCache[color];
+  return styleCache[styleKey];
 }

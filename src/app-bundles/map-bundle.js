@@ -37,6 +37,13 @@ export default {
             zoom: 14,
           }),
         });
+        const view = map.getView();
+        const handleZoomChange = () => {
+          const zoom = view.getZoom();
+          console.log("Current zoom level:", zoom);
+        };
+
+        view.on("change:resolution", handleZoomChange);
         useGeographic(); // NSI is in EPSG 4326
         dispatch({ type: actions.INITIALIZED, payload: { map: map } });
       }

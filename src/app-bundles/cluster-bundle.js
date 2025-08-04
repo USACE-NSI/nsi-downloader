@@ -40,7 +40,7 @@ export default {
       const map = store.selectMapMap();
       const vectorSource = store.selectNsiSource();
       const clusterSource = new Cluster({
-        distance: 10,
+        distance: 40,
         source: vectorSource,
       });
       const clusters = new VectorLayer({
