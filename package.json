@@ -10,12 +10,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.1.11",
     "money-clip": "^3.0.5",
     "ol": "^10.6.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "redux-bundler": "^29.1.0",
-    "redux-bundler-hook": "^1.0.3"
+    "redux-bundler-hook": "^1.0.3",
+    "tailwindcss": "^4.1.11"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

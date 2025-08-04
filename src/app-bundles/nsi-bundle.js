@@ -3,7 +3,7 @@ import VectorSource from "ol/source/Vector.js";
 
 import { actions as mapActions } from "./map-bundle.js";
 import VectorLayer from "ol/layer/Vector.js";
-import { clusterStyle } from "../styles/cluster-style-factory.js";
+import { makeClusterStyler } from "../styles/cluster-style-factory.js";
 
 export const actions = {
   INITIALIZED_START: "NSI_INITIALIZED_START",
@@ -15,7 +15,6 @@ export default {
   getReducer: () => {
     const initialState = { _shouldInit: false, layer: null };
     return (state = initialState, { type, payload }) => {
-      console.log(type, payload);
       switch (type) {
         case mapActions.INITIALIZED:
           return { ...state, ...{ _shouldInit: true } };
@@ -40,7 +39,10 @@ export default {
       const vectorSource = new VectorSource();
       const layer = new VectorLayer({
         source: vectorSource,
-        style: clusterStyle,
+        style: makeClusterStyler({
+          property: "st_damcat",
+          colorForValue: () => "#2E86DE",
+        }),
         visible: false,
       });
       map.addLayer(layer);

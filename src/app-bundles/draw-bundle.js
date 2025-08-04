@@ -16,7 +16,6 @@ export default {
   getReducer: () => {
     const initialState = { _shouldInit: false, layer: null };
     return (state = initialState, { type, payload }) => {
-      console.log(type, payload);
       switch (type) {
         case mapActions.INITIALIZED:
           return { ...state, ...{ _shouldInit: true } };

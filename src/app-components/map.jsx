@@ -9,7 +9,7 @@ function Map() {
     if (!el.current) return undefined;
     doMapInitialize(el.current);
   }, [el.current]);
-  return <div ref={el} className="map"></div>;
+  return <div ref={el} className="w-full h-[70vh]"></div>;
 }
 
 export default Map;

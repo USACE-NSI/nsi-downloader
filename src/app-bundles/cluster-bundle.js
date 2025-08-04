@@ -1,10 +1,7 @@
 import { Cluster } from "ol/source.js";
-import { GetNSI } from "./nsi-bundle.js";
-import GeoJSON from "ol/format/GeoJSON.js";
 import { actions as nsiActions } from "./nsi-bundle.js";
 import VectorLayer from "ol/layer/Vector.js";
-import VectorSource from "ol/source/Vector.js";
-import { clusterStyle } from "../styles/cluster-style-factory.js";
+import { structureStyles } from "../styles/nsi-styles.js";
 
 const actions = {
   INITIALIZED_START: "CLUSTER_INITIALIZED_START",
@@ -16,7 +13,6 @@ export default {
   getReducer: () => {
     const initialState = { _shouldInit: false, layer: null };
     return (state = initialState, { type, payload }) => {
-      console.log(type, payload);
       switch (type) {
         case nsiActions.INITIALIZED:
           return { ...state, ...{ _shouldInit: true } };
@@ -45,11 +41,16 @@ export default {
       });
       const clusters = new VectorLayer({
         source: clusterSource,
-        style: clusterStyle,
+        style: structureStyles["Red"],
         visible: true,
       });
       map.addLayer(clusters);
       dispatch({ type: actions.INITIALIZED, payload: { layer: clusters } });
+    };
+  },
+  doClusterChangeStyle: (newProperty) => {
+    return ({ store }) => {
+      store.selectClusterLayer().setStyle(structureStyles[newProperty]);
     };
   },
   reactClusterShouldInit: (state) => {

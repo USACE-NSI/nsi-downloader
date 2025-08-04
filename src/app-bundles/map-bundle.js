@@ -34,7 +34,7 @@ export default {
           ],
           target: target,
           view: new View({
-            center: fromLonLat([-122.4194, 37.7749]),
+            center: fromLonLat([-122.4444, 37.7749]),
             zoom: 14,
           }),
         });
