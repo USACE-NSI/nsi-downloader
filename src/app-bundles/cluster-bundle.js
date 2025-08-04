@@ -4,7 +4,7 @@ import GeoJSON from "ol/format/GeoJSON.js";
 import { actions as nsiActions } from "./nsi-bundle.js";
 import VectorLayer from "ol/layer/Vector.js";
 import VectorSource from "ol/source/Vector.js";
-import { nsiStyle } from "../styles/nsi-styles.js";
+import { clusterStyle } from "../styles/cluster-style-factory.js";
 
 const actions = {
   INITIALIZED_START: "CLUSTER_INITIALIZED_START",
@@ -38,21 +38,23 @@ export default {
         payload: { _shouldInit: false },
       });
       const map = store.selectMapMap();
-      const vectorSource = store.selectNsiSource();
+      const vectorSource = store.selectNsiLayer().getSource();
       const clusterSource = new Cluster({
-        distance: 40,
+        distance: 60,
         source: vectorSource,
       });
       const clusters = new VectorLayer({
         source: clusterSource,
-        style: nsiStyle,
+        style: clusterStyle,
+        visible: true,
       });
       map.addLayer(clusters);
-      dispatch({ type: actions.INITIALIZED, payload: {} });
+      dispatch({ type: actions.INITIALIZED, payload: { layer: clusters } });
     };
   },
   reactClusterShouldInit: (state) => {
-    if (state.cluster._shouldInit)
+    if (state.cluster._shouldInit && state.nsi.layer) {
       return { actionCreator: "doClusterInitialize" };
+    }
   },
 };

@@ -2,6 +2,8 @@ import GeoJSON from "ol/format/GeoJSON.js";
 import VectorSource from "ol/source/Vector.js";
 
 import { actions as mapActions } from "./map-bundle.js";
+import VectorLayer from "ol/layer/Vector.js";
+import { clusterStyle } from "../styles/cluster-style-factory.js";
 
 export const actions = {
   INITIALIZED_START: "NSI_INITIALIZED_START",
@@ -11,7 +13,7 @@ export const actions = {
 export default {
   name: "nsi",
   getReducer: () => {
-    const initialState = { _shouldInit: false, source: null };
+    const initialState = { _shouldInit: false, layer: null };
     return (state = initialState, { type, payload }) => {
       console.log(type, payload);
       switch (type) {
@@ -25,8 +27,8 @@ export default {
       }
     };
   },
-  selectNsiSource: (state) => {
-    return state.nsi.source;
+  selectNsiLayer: (state) => {
+    return state.nsi.layer;
   },
   doNsiInitialize: () => {
     return ({ dispatch }) => {
@@ -34,15 +36,23 @@ export default {
         type: actions.INITIALIZED_START,
         payload: { _shouldInit: false },
       });
+      const map = store.selectMapMap();
+      const vectorSource = new VectorSource();
+      const layer = new VectorLayer({
+        source: vectorSource,
+        style: clusterStyle,
+        visible: false,
+      });
+      map.addLayer(layer);
       dispatch({
         type: actions.INITIALIZED,
-        payload: { source: new VectorSource() },
+        payload: { layer: layer },
       });
     };
   },
   doNsiAddStructures: (bbox) => {
     return async ({ store }) => {
-      const source = store.selectNsiSource();
+      const source = store.selectNsiLayer().getSource();
       const geojson = await GetNSI(`structures?bbox=${bbox}`);
       source.addFeatures(new GeoJSON().readFeatures(geojson));
     };

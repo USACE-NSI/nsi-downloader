@@ -18,26 +18,22 @@ function majorityType(features) {
 
 const styleCache = {};
 
-export function nsiStyle(feature) {
+export function pointStyle(feature) {}
+
+export function clusterStyle(feature) {
   const members = feature.get("features");
-  const domType = majorityType(members);
-  const color = COLORS[domType] || "#000000";
-
-  let radius = 10;
-  if (members.length > 1) {
-    radius = Math.min(10 + members.length, 30);
-  }
-
+  const color = COLORS[majorityType(members)] || "#000000";
+  const radius = members.length === 1 ? 10 : Math.min(9 + members.length, 30);
   const styleKey = `${color}_${radius}_${members.length}`;
   if (!styleCache[styleKey]) {
     styleCache[styleKey] = new Style({
       image: new CircleStyle({
-        radius: radius,
-        fill: new Fill({ color: color }),
+        radius,
+        fill: new Fill({ color }),
         stroke: new Stroke({ color: "#fff", width: 1 }),
       }),
       text: new Text({
-        text: members.length.toString(),
+        text: String(members.length),
         font: "12px sans-serif",
         fill: new Fill({ color: "#fff" }),
         stroke: new Stroke({ color: "#000", width: 2 }),

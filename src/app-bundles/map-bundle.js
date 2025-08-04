@@ -5,6 +5,7 @@ import OSM from "ol/source/OSM.js";
 import { useGeographic, fromLonLat } from "ol/proj";
 
 const actions = { INITIALIZED: "MAP_INITIALIZED" };
+const Z_SWITCH = 18;
 
 export default {
   name: "map",
@@ -38,17 +39,24 @@ export default {
           }),
         });
         const view = map.getView();
-        const handleZoomChange = () => {
-          const zoom = view.getZoom();
-          console.log("Current zoom level:", zoom);
-        };
+        updateLayerVisibility(store, view.getZoom() ?? 0);
 
-        view.on("change:resolution", handleZoomChange);
+        view.on("change:resolution", () => {
+          updateLayerVisibility(store, view.getZoom());
+        });
         useGeographic(); // NSI is in EPSG 4326
         dispatch({ type: actions.INITIALIZED, payload: { map: map } });
       }
     };
   },
 };
+
+function updateLayerVisibility(store, zoom) {
+  const nsiLayer = store.selectNsiLayer(); // may be undefined
+  const clusterLayer = store.selectClusterLayer(); // may be undefined
+
+  if (nsiLayer) nsiLayer.setVisible(zoom >= Z_SWITCH);
+  if (clusterLayer) clusterLayer.setVisible(zoom < Z_SWITCH);
+}
 
 export { actions };
