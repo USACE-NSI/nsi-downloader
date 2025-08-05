@@ -1,6 +1,6 @@
 import GeoJSON from "ol/format/GeoJSON.js";
 import VectorSource from "ol/source/Vector.js";
-
+import { getNewStyle } from "../styles/nsi-styles.js";
 import { actions as mapActions } from "./map-bundle.js";
 import VectorLayer from "ol/layer/Vector.js";
 import { makeClusterStyler } from "../styles/cluster-style-factory.js";
@@ -39,10 +39,7 @@ export default {
       const vectorSource = new VectorSource();
       const layer = new VectorLayer({
         source: vectorSource,
-        style: makeClusterStyler({
-          property: "st_damcat",
-          colorForValue: () => "#2E86DE",
-        }),
+        style: getNewStyle(vectorSource, store.selectInfoSelectedProperty()),
         visible: false,
       });
       map.addLayer(layer);
@@ -57,6 +54,13 @@ export default {
       const source = store.selectNsiLayer().getSource();
       const geojson = await GetNSI(`structures?bbox=${bbox}`);
       source.addFeatures(new GeoJSON().readFeatures(geojson));
+    };
+  },
+  doNsiChangeStyle: (newProperty) => {
+    return ({ store }) => {
+      store
+        .selectNsiLayer()
+        .setStyle(getNewStyle(store.selectNsiLayer().getSource(), newProperty));
     };
   },
   reactNsiShouldInit: (state) => {

@@ -5,7 +5,7 @@ import OSM from "ol/source/OSM.js";
 import { useGeographic, fromLonLat } from "ol/proj";
 
 const actions = { INITIALIZED: "MAP_INITIALIZED" };
-const Z_SWITCH = 18;
+const Z_SWITCH = 16;
 
 export default {
   name: "map",

@@ -1,7 +1,7 @@
 import { Cluster } from "ol/source.js";
 import { actions as nsiActions } from "./nsi-bundle.js";
 import VectorLayer from "ol/layer/Vector.js";
-import { structureStyles } from "../styles/nsi-styles.js";
+import { getNewStyle } from "../styles/nsi-styles.js";
 
 const actions = {
   INITIALIZED_START: "CLUSTER_INITIALIZED_START",
@@ -41,7 +41,7 @@ export default {
       });
       const clusters = new VectorLayer({
         source: clusterSource,
-        style: structureStyles["Red"],
+        style: getNewStyle(clusterSource, store.selectInfoSelectedProperty()),
         visible: true,
       });
       map.addLayer(clusters);
@@ -50,7 +50,11 @@ export default {
   },
   doClusterChangeStyle: (newProperty) => {
     return ({ store }) => {
-      store.selectClusterLayer().setStyle(structureStyles[newProperty]);
+      store
+        .selectClusterLayer()
+        .setStyle(
+          getNewStyle(store.selectClusterLayer().getSource(), newProperty)
+        );
     };
   },
   reactClusterShouldInit: (state) => {

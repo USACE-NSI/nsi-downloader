@@ -3,11 +3,8 @@ import { Style, Fill, Stroke, Text, Circle as CircleStyle } from "ol/style";
 export function makeClusterStyler(opts) {
   const {
     property,
-    colorForValue: colorForValue,
-    colorForCluster = (values) =>
-      colorForValue(
-        mostFrequent(values) // default = majority colour
-      ),
+    colorForValue,
+    colorForCluster,
     radiusForSize = (size) => (size === 1 ? 10 : Math.min(9 + size, 25)),
     labelSingle = false,
   } = opts;
@@ -15,39 +12,23 @@ export function makeClusterStyler(opts) {
   const cache = {}; // key => Style
 
   return function style(feature) {
-    // ----------------------------------------------------------------
-    // 1. Unwrap single points / clusters
-    // ----------------------------------------------------------------
     const members = feature.get("features") || [feature];
     const size = members.length;
 
-    // ----------------------------------------------------------------
-    // 2. Decide colour
-    // ----------------------------------------------------------------
-    const colour =
+    const color =
       size === 1
         ? colorForValue(members[0].get(property))
         : colorForCluster(members.map((f) => f.get(property)));
-
-    // ----------------------------------------------------------------
-    // 3. Decide radius & label
-    // ----------------------------------------------------------------
     const radius = radiusForSize(size);
     const text = size > 1 || labelSingle ? String(size) : "";
 
-    // ----------------------------------------------------------------
-    // 4. Cache key
-    // ----------------------------------------------------------------
-    const key = `${colour}_${radius}_${text}`;
+    const key = `${color}_${radius}_${text}`;
 
-    // ----------------------------------------------------------------
-    // 5. Build style if needed
-    // ----------------------------------------------------------------
     if (!cache[key]) {
       cache[key] = new Style({
         image: new CircleStyle({
           radius,
-          fill: new Fill({ color: colour }),
+          fill: new Fill({ color: color }),
           stroke: new Stroke({ color: "#fff", width: 1 }),
         }),
         text: text
@@ -64,8 +45,7 @@ export function makeClusterStyler(opts) {
   };
 }
 
-/* helper ------------------------------------------------------------*/
-function mostFrequent(arr) {
+export function mostFrequent(arr) {
   const counts = {};
   let bestVal,
     bestCnt = -1;
@@ -77,4 +57,23 @@ function mostFrequent(arr) {
     }
   });
   return bestVal;
+}
+
+export function getMinMaxFromSource(source, propName) {
+  let min = Infinity;
+  let max = -Infinity;
+
+  if (source.getState() !== "ready") {
+    console.warn("getMinMaxFromSource called before source is ready");
+    return [min, max];
+  }
+
+  source.getFeatures().forEach((f) => {
+    const v = Number(f.get(propName));
+    if (!Number.isFinite(v)) return;
+    if (v < min) min = v;
+    if (v > max) max = v;
+  });
+
+  return [min, max];
 }
