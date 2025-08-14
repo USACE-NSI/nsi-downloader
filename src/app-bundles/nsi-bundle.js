@@ -3,17 +3,17 @@ import VectorSource from "ol/source/Vector.js";
 import { getNewStyle } from "../styles/nsi-style-selector.js";
 import { actions as mapActions } from "./map-bundle.js";
 import VectorLayer from "ol/layer/Vector.js";
-import { makeClusterStyler } from "../styles/cluster-style-factory.js";
 
 export const actions = {
   INITIALIZED_START: "NSI_INITIALIZED_START",
   INITIALIZED: "NSI_INITIALIZED",
+  STRUCTURES_DRAWN: "NSI_STRUCTURES_DRAWN",
 };
 
 export default {
   name: "nsi",
   getReducer: () => {
-    const initialState = { _shouldInit: false, layer: null };
+    const initialState = { _shouldInit: false, layer: null, isDrawn: false };
     return (state = initialState, { type, payload }) => {
       switch (type) {
         case mapActions.INITIALIZED:
@@ -21,6 +21,8 @@ export default {
         case actions.INITIALIZED_START:
         case actions.INITIALIZED:
           return { ...state, ...payload };
+        case actions.STRUCTURES_DRAWN:
+          return { ...state, ...{ isDrawn: true } };
         default:
           return state;
       }
@@ -50,10 +52,16 @@ export default {
     };
   },
   doNsiAddStructures: (bbox) => {
-    return async ({ store }) => {
+    return async ({ store, dispatch }) => {
       const source = store.selectNsiLayer().getSource();
       const geojson = await GetNSI(`structures?bbox=${bbox}`);
       source.addFeatures(new GeoJSON().readFeatures(geojson));
+      const currentSelectedProperty = store.selectInfoSelectedProperty();
+      store.doClusterChangeStyle(currentSelectedProperty);
+      store.doNsiChangeStyle(currentSelectedProperty);
+      dispatch({
+        type: actions.STRUCTURES_DRAWN,
+      });
     };
   },
   doNsiChangeStyle: (newProperty) => {

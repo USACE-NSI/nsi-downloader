@@ -1,3 +1,5 @@
+import Cluster from "ol/source/Cluster";
+
 import {
   getMinMaxFromSource,
   makeClusterStyler,
@@ -10,14 +12,17 @@ let partitionMap;
 let colorForVal;
 
 export function updateValStruct(source) {
-  if (source.getFeatures().length == 0) {
+  if (source.getFeatures().length == 0 || source instanceof Cluster) {
     return;
   }
   // only compute min, max, buckets once
   const shouldInit =
     !Number.isFinite(minValStruct) && !Number.isFinite(maxValStruct);
+  console.log(shouldInit);
+
   if (shouldInit) {
     [minValStruct, maxValStruct] = getMinMaxFromSource(source, "val_struct");
+    console.log(minValStruct, maxValStruct);
     partitionMap = getPartitionColorMap(
       minValStruct,
       maxValStruct,

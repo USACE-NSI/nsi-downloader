@@ -2,7 +2,6 @@ import { Cluster } from "ol/source.js";
 import { actions as nsiActions } from "./nsi-bundle.js";
 import VectorLayer from "ol/layer/Vector.js";
 import { getNewStyle } from "../styles/nsi-style-selector.js";
-
 const actions = {
   INITIALIZED_START: "CLUSTER_INITIALIZED_START",
   INITIALIZED: "CLUSTER_INITIALIZED",

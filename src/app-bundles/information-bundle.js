@@ -5,11 +5,11 @@ const actions = {
 export default {
   name: "info",
   getReducer: () => {
-    const initialState = { selectedProperty: "st_damcat" };
+    const initialState = { selectedProperty: "st_damcat", numStructures: 0 };
     return (state = initialState, { type, payload }) => {
       switch (type) {
         case actions.CHANGED_SELECTED_PROPERTY:
-          return { ...state, ...payload };
+          return { ...state, selectedProperty: payload.prop };
         default:
           return state;
       }
