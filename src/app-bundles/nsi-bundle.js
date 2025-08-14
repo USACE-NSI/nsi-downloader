@@ -1,6 +1,6 @@
 import GeoJSON from "ol/format/GeoJSON.js";
 import VectorSource from "ol/source/Vector.js";
-import { getNewStyle } from "../styles/nsi-styles.js";
+import { getNewStyle } from "../styles/nsi-style-selector.js";
 import { actions as mapActions } from "./map-bundle.js";
 import VectorLayer from "ol/layer/Vector.js";
 import { makeClusterStyler } from "../styles/cluster-style-factory.js";

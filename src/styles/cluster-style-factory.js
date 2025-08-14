@@ -12,13 +12,16 @@ export function makeClusterStyler(opts) {
   const cache = {}; // key => Style
 
   return function style(feature) {
+    // if feature.get("features") returns true, this is a cluster
+    // if it does not, this is a single point
+    // we wrap the single point in an array for consistency
     const members = feature.get("features") || [feature];
     const size = members.length;
 
     const color =
       size === 1
-        ? colorForValue(members[0].get(property))
-        : colorForCluster(members.map((f) => f.get(property)));
+        ? colorForValue(members[0].get(property)) // single point
+        : colorForCluster(members.map((f) => f.get(property))); // cluster w/ > 1 features
     const radius = radiusForSize(size);
     const text = size > 1 || labelSingle ? String(size) : "";
 

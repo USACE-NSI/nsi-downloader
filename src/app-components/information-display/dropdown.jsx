@@ -1,5 +1,5 @@
 import { useConnect } from "redux-bundler-hook";
-import { structureStyles } from "../styles/nsi-styles";
+import { structureStyles } from "../../styles/nsi-style-selector.js";
 
 /* ───────────────────────────────────────────────
    A nicely-styled native <select> using Tailwind
@@ -44,7 +44,7 @@ function StyledSelect({ items }) {
 export default function Example() {
   return (
     <div>
-      <StyledSelect items={Object.keys(structureStyles)} />
+      <StyledSelect items={structureStyles} />
     </div>
   );
 }
