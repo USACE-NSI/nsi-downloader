@@ -41,7 +41,7 @@ export default {
       const polyLayer = new VectorLayer({
         source: polySource,
         style: new Style({
-          fill: new Fill({ color: "rgba(33,150,243,0.3)" }),
+          fill: new Fill({ color: "rgba(33,150,243,0.2)" }),
           stroke: new Stroke({ color: "#2196f3", width: 2 }),
         }),
       });
@@ -61,6 +61,9 @@ export default {
         const coords = e.feature.getGeometry().getCoordinates()[0];
         const bbox = coords.map((coord) => `${coord[0]},${coord[1]}`).join(",");
         store.doNsiAddStructures(bbox);
+        map.removeInteraction(draw);
+        map.removeInteraction(mod);
+        map.removeInteraction(snap);
       });
       dispatch({ type: actions.INITIALIZED, payload: { layer: polyLayer } });
     };
