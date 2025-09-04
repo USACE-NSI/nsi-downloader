@@ -20,12 +20,12 @@ function StyledSelect({ items }) {
         defaultValue={infoSelectedProperty}
         onChange={handleChange}
         className="
-          block w-32 m-2
-          rounded-md border border-gray-300 bg-white
-          text-sm p-1
+          block w-32
+          rounded-md
+          text-sm p-1.5
           hover:border-indigo-400 hover:ring-1
-          focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500
-          dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100
+          focus:border-white focus:outline-none focus:ring-2 focus:ring-indigo-500
+          dark:border-slate-600 dark:bg-gray-700 dark:text-slate-100
         "
       >
         {items.map((item) => (

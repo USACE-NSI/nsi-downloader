@@ -1,6 +1,6 @@
 import { makeClusterStyler, mostFrequent } from "../cluster-style-factory";
 
-const DAMCAT_COLORS = {
+export const DAMCAT_COLORS = {
   RES: "#2E86DE",
   PUB: "#E74C3C",
   COM: "#27AE60",

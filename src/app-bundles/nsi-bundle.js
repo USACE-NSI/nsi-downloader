@@ -55,7 +55,9 @@ export default {
     return async ({ store, dispatch }) => {
       const source = store.selectNsiLayer().getSource();
       const geojson = await GetNSI(`structures?bbox=${bbox}`);
-      source.addFeatures(new GeoJSON().readFeatures(geojson));
+      const features = new GeoJSON().readFeatures(geojson);
+      source.addFeatures(features);
+      store.doInfoUpdateNumStructures(features.length);
       const currentSelectedProperty = store.selectInfoSelectedProperty();
       store.doClusterChangeStyle(currentSelectedProperty);
       store.doNsiChangeStyle(currentSelectedProperty);
