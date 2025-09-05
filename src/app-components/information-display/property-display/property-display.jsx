@@ -13,13 +13,15 @@ export function PropertyDisplay({ header, size = "" }) {
     doNsiChangeStyle,
     stylesDamcatColors,
     stylesValstructMap,
+    stylesNumstoryMap,
   } = useConnect(
     "selectInfoSelectedProperty",
     "doInfoChangeSelectedProperty",
     "doClusterChangeStyle",
     "doNsiChangeStyle",
     "selectStylesDamcatColors",
-    "selectStylesValstructMap"
+    "selectStylesValstructMap",
+    "selectStylesNumstoryMap"
   );
   const CHOICES = {
     st_damcat: {
@@ -31,6 +33,12 @@ export function PropertyDisplay({ header, size = "" }) {
       props: {
         colorMap: stylesValstructMap,
         prefix: "$",
+      },
+    },
+    num_story: {
+      Component: ColorLegend,
+      props: {
+        colorMap: stylesNumstoryMap,
       },
     },
   };

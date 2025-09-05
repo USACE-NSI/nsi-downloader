@@ -12,20 +12,17 @@ export function ColorLegend({ colorMap, prefix = null, suffix = null }) {
   const ranges = sortedUppers.map((upper, i) => {
     const lower = i === 0 ? min : sortedUppers[i - 1];
     const color = map[upper];
-    const pct = ((upper - lower) / (max - min)) * 100;
-    return { lower, upper, color, pct };
+    return { lower, upper, color };
   });
 
   return (
     <div className="flex w-full rounded-md overflow-hidden min-h-12">
-      {ranges.map(({ lower, upper, color, pct }) => (
+      {ranges.map(({ lower, upper, color }) => (
         <div
           key={upper}
-          className="flex items-center justify-center text-white text-xs p-1"
+          className="flex flex-1 items-center justify-center text-white text-xs p-1"
           style={{
             backgroundColor: color,
-            flexGrow: pct,
-            flexBasis: 0,
           }}
         >
           {prefix}

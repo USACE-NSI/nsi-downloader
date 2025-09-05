@@ -25,9 +25,19 @@ export function getNewStyle(source, newProperty) {
         });
         return [styleFunction, legend];
       }
+    case "num_story":
+      if (validateSource(source)) {
+        const [legend, assigner] = getLegendAndAssigner(source, newProperty);
+        const styleFunction = makeClusterStyler({
+          property: "num_story",
+          colorForValue: (e) => assigner(e),
+          colorForCluster: () => "#31ee",
+        });
+        return [styleFunction, legend];
+      }
     default:
       return [damcatStyleFunction, null];
   }
 }
 
-export const structureStyles = ["st_damcat", "val_struct"];
+export const structureStyles = ["st_damcat", "val_struct", "num_story"];
