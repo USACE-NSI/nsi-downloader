@@ -46,9 +46,9 @@ export function validateSource(source) {
   return !(source.getFeatures().length == 0);
 }
 
-export function getMapAndAssigner(source, property) {
+export function getLegendAndAssigner(source, property) {
   const [min, max] = getMinMaxFromSource(source, property);
   const map = getPartitionColorMap(min, max, 8);
   const f = makeColorAssigner(map, max);
-  return [map, f];
+  return [{ min, max, map }, f];
 }

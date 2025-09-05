@@ -12,14 +12,14 @@ export function PropertyDisplay({ header, size = "" }) {
     doClusterChangeStyle,
     doNsiChangeStyle,
     stylesDamcatColors,
-    doUpdateStyle,
+    stylesValstructMap,
   } = useConnect(
     "selectInfoSelectedProperty",
     "doInfoChangeSelectedProperty",
     "doClusterChangeStyle",
     "doNsiChangeStyle",
     "selectStylesDamcatColors",
-    "doUpdateStyle"
+    "selectStylesValstructMap"
   );
   const CHOICES = {
     st_damcat: {
@@ -29,9 +29,7 @@ export function PropertyDisplay({ header, size = "" }) {
     val_struct: {
       Component: ColorLegend,
       props: {
-        min: 0,
-        max: 100000,
-        partitions: 5,
+        colorMap: stylesValstructMap,
         prefix: "$",
       },
     },
@@ -40,12 +38,6 @@ export function PropertyDisplay({ header, size = "" }) {
     doInfoChangeSelectedProperty(e.target.value);
     doClusterChangeStyle(e.target.value);
     doNsiChangeStyle(e.target.value);
-    // doUpdateStyle(e.target.value, {
-    //   RES: "#2E86DE",
-    //   PUB: "#2E86DE",
-    //   COM: "#2E86DE",
-    //   IND: "#2E86DE",
-    // });
   };
   const { Component, props } = CHOICES[infoSelectedProperty];
   return (

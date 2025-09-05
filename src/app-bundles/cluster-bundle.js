@@ -40,7 +40,10 @@ export default {
       });
       const clusters = new VectorLayer({
         source: clusterSource,
-        style: getNewStyle(clusterSource, store.selectInfoSelectedProperty()),
+        style: getNewStyle(
+          clusterSource,
+          store.selectInfoSelectedProperty()
+        )[0],
         visible: true,
       });
       map.addLayer(clusters);
@@ -52,7 +55,7 @@ export default {
       store
         .selectClusterLayer()
         .setStyle(
-          getNewStyle(store.selectClusterLayer().getSource(), newProperty)
+          getNewStyle(store.selectClusterLayer().getSource(), newProperty)[0]
         );
     };
   },

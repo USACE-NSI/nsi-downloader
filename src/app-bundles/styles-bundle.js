@@ -28,7 +28,7 @@ export default {
 
   doUpdateStyle: (property, newStyle) => {
     return ({ dispatch }) => {
-      console.log(property, newStyle);
+      //console.log(property, newStyle);
       switch (property) {
         case "st_damcat":
           dispatch({ type: actions.NEW_DAMCAT, payload: { newStyle } });

@@ -41,7 +41,7 @@ export default {
       const vectorSource = new VectorSource();
       const layer = new VectorLayer({
         source: vectorSource,
-        style: getNewStyle(vectorSource, store.selectInfoSelectedProperty()),
+        style: getNewStyle(vectorSource, store.selectInfoSelectedProperty())[0],
         visible: false,
       });
       map.addLayer(layer);
@@ -68,9 +68,12 @@ export default {
   },
   doNsiChangeStyle: (newProperty) => {
     return ({ store }) => {
-      store
-        .selectNsiLayer()
-        .setStyle(getNewStyle(store.selectNsiLayer().getSource(), newProperty));
+      const [newStyle, newObj] = getNewStyle(
+        store.selectNsiLayer().getSource(),
+        newProperty
+      );
+      store.selectNsiLayer().setStyle(newStyle);
+      store.doUpdateStyle(newProperty, newObj);
     };
   },
   reactNsiShouldInit: (state) => {
