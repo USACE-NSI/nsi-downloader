@@ -1,28 +1,13 @@
-import { useConnect } from "redux-bundler-hook";
-import { structureStyles } from "../../styles/nsi-style-selector.js";
-
-/* ───────────────────────────────────────────────
-   A nicely-styled native <select> using Tailwind
-──────────────────────────────────────────────── */
-function StyledSelect({ items }) {
-  const { infoSelectedProperty, doInfoChangeSelectedProperty } = useConnect(
-    "selectInfoSelectedProperty",
-    "doInfoChangeSelectedProperty"
-  );
-
-  const handleChange = (e) => {
-    doInfoChangeSelectedProperty(e.target.value);
-  };
-
+export function Dropdown({ items, defaultValue, onChange }) {
   return (
     <div>
       <select
-        defaultValue={infoSelectedProperty}
-        onChange={handleChange}
+        defaultValue={defaultValue}
+        onChange={onChange}
         className="
           block w-32
           rounded-md
-          text-sm p-1.5
+          text-sm p-1
           hover:border-indigo-400 hover:ring-1
           focus:border-white focus:outline-none focus:ring-2 focus:ring-indigo-500
           dark:border-slate-600 dark:bg-gray-700 dark:text-slate-100
@@ -34,17 +19,6 @@ function StyledSelect({ items }) {
           </option>
         ))}
       </select>
-    </div>
-  );
-}
-
-/* ───────────────────────────────────────────────
-   Example usage
-──────────────────────────────────────────────── */
-export default function Example() {
-  return (
-    <div>
-      <StyledSelect items={structureStyles} />
     </div>
   );
 }

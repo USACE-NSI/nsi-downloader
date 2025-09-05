@@ -1,9 +1,12 @@
-export function InfoItem({ children, header, size = "" }) {
+export function InfoItem({ children, header, optional = null, size = "" }) {
   return (
     <div
-      className={`flex flex-col gap-2 border border-gray-400 rounded-md text-white p-2 ${size}`}
+      className={`flex flex-col gap-2 bg-[#2B2B2B] rounded-md text-white p-2 ${size}`}
     >
-      <div className="text-md font-bold">{header}</div>
+      <div className="flex gap-2 text-md font-bold">
+        {header}
+        {optional}
+      </div>
       {children}
     </div>
   );

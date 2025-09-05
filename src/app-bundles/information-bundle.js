@@ -10,7 +10,7 @@ export default {
     return (state = initialState, { type, payload }) => {
       switch (type) {
         case actions.CHANGED_SELECTED_PROPERTY:
-          return { ...state, selectedProperty: payload.prop };
+          return { ...state, selectedProperty: payload.newProperty };
         case actions.UPDATED_NUM_STRUCTURES:
           return { ...state, numStructures: payload.numStructures };
         default:
@@ -21,12 +21,10 @@ export default {
   selectInfoSelectedProperty: (state) => state.info.selectedProperty,
   selectInfoNumStructures: (state) => state.info.numStructures,
   doInfoChangeSelectedProperty: (newProperty) => {
-    return ({ store, dispatch }) => {
-      store.doClusterChangeStyle(newProperty);
-      store.doNsiChangeStyle(newProperty);
+    return ({ dispatch }) => {
       dispatch({
         type: actions.CHANGED_SELECTED_PROPERTY,
-        payload: { prop: newProperty },
+        payload: { newProperty },
       });
     };
   },
