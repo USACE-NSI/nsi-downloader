@@ -18,39 +18,47 @@ export function updateValStruct(source) {
   // only compute min, max, buckets once
   const shouldInit =
     !Number.isFinite(minValStruct) && !Number.isFinite(maxValStruct);
-  console.log(shouldInit);
+  //console.log(shouldInit);
 
   if (shouldInit) {
     [minValStruct, maxValStruct] = getMinMaxFromSource(source, "val_struct");
-    console.log(minValStruct, maxValStruct);
+    //console.log(minValStruct, maxValStruct);
     partitionMap = getPartitionColorMap(
       minValStruct,
       maxValStruct,
       NUM_BUCKETS
     );
-    colorForVal = makeColorAssigner(partitionMap, "#000");
+    colorForVal = makeColorAssigner(partitionMap, maxValStruct);
   }
 }
 
-function getPartitionColorMap(min, max, partitions, startHue = 60, endHue = 0) {
+export function getPartitionColorMap(
+  min,
+  max,
+  partitions,
+  startHue = 60,
+  endHue = 0
+) {
   const width = (max - min) / partitions;
   const out = {};
   for (let i = 1; i <= partitions; i++) {
-    const upper = min + width * i;
+    const rawUpper = min + width * i;
+    const upper = Math.floor(rawUpper);
     const t = i / partitions;
     const hue = startHue + (endHue - startHue) * t;
     const color = `hsl(${hue.toFixed(0)}, 70%, 50%)`;
     out[upper] = color;
   }
+  //console.log(out);
   return out;
 }
 
-function makeColorAssigner(upperToColor) {
+function makeColorAssigner(upperToColor, max) {
   return function colorForValue(v) {
     for (let upper in upperToColor) {
       if (v <= upper) return upperToColor[upper];
     }
-    return upperToColor[maxValStruct];
+    return upperToColor[Math.floor(max)];
   };
 }
 

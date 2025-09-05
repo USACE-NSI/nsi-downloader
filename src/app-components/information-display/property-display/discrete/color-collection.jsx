@@ -1,4 +1,5 @@
 import { DiscreteColor } from "./discrete-color";
+import { ColorLegend } from "../continuous/color-legend";
 
 export function ColorCollection({ colorMap }) {
   return (

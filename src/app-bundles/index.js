@@ -6,6 +6,7 @@ import nsiBundle from "./nsi-bundle.js";
 import drawBundle from "./draw-bundle.js";
 import clusterBundle from "./cluster-bundle.js";
 import infoBundle from "./information-bundle.js";
+import stylesBundle from "./styles-bundle.js";
 
 export default composeBundles(
   createUrlBundle(),
@@ -14,5 +15,6 @@ export default composeBundles(
   drawBundle,
   nsiBundle,
   clusterBundle,
-  infoBundle
+  infoBundle,
+  stylesBundle
 );
