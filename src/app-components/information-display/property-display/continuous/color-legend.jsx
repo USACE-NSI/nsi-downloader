@@ -1,14 +1,17 @@
+import { useEffect } from "react";
 import { useConnect } from "redux-bundler-hook";
 
 // these properties are discrete numerical values (e.g. number of stories)
 // if the ranges are one unit (e.g. 1-2), we want to just display the upper bound to avoid confusion
 const DISCRETE_RANGE_PROPERTIES = ["num_story"];
 
-export function ColorLegend({ colorMap, prefix = null, suffix = null }) {
+export function ColorLegend({ colorMap, prefix = "", suffix = "" }) {
   const { infoSelectedProperty } = useConnect("selectInfoSelectedProperty");
   if (!colorMap) return <div>-</div>; // just display a hyphen if there is no data to create a legend off of
+
   const map = colorMap.map;
   const min = colorMap.min;
+  const max = colorMap.max;
 
   const sortedUppers = Object.keys(map)
     .map(Number)
@@ -23,9 +26,9 @@ export function ColorLegend({ colorMap, prefix = null, suffix = null }) {
   return (
     <div className="flex w-full rounded-md overflow-hidden min-h-12">
       {ranges.map(({ lower, upper, color }) => {
-        const isSingle =
-          upper - lower <= 1 &&
-          DISCRETE_RANGE_PROPERTIES.includes(infoSelectedProperty);
+        console.log(lower, upper);
+        const isSingle = upper - lower <= 1 && max - min <= 8;
+        DISCRETE_RANGE_PROPERTIES.includes(infoSelectedProperty);
 
         return (
           <div

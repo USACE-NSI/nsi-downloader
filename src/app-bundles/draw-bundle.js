@@ -48,8 +48,7 @@ export default {
       map.addLayer(polyLayer);
       const draw = new Draw({
         source: polySource,
-        type: "Circle",
-        geometryFunction: createBox(),
+        type: "Polygon",
       });
       const mod = new Modify({ source: polySource });
       const snap = new Snap({ source: polySource });

@@ -40,4 +40,14 @@ export function getNewStyle(source, newProperty) {
   }
 }
 
-export const structureStyles = ["st_damcat", "val_struct", "num_story"];
+export const structureProperties = {
+  "Damage Category": "st_damcat",
+  "Structure Value": "val_struct",
+  "Number of Stories": "num_story",
+};
+
+export const reverseStructurePropertiesLookup = {
+  st_damcat: "Damage Category",
+  val_struct: "Structure Value",
+  num_story: "Number of Stories",
+};

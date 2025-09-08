@@ -5,7 +5,7 @@ export function Dropdown({ items, defaultValue, onChange }) {
         defaultValue={defaultValue}
         onChange={onChange}
         className="
-          block w-32
+          block
           rounded-md
           text-sm p-1
           hover:border-indigo-400 hover:ring-1

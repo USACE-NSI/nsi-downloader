@@ -3,11 +3,14 @@ import { InfoItem } from "../info-item";
 import { ColorCollection } from "./discrete/color-collection";
 import { ColorLegend } from "./continuous/color-legend";
 import { Dropdown } from "../dropdown";
-import { structureStyles } from "../../../styles/nsi-style-selector";
+import { structureProperties } from "../../../styles/nsi-style-selector";
+import { useEffect } from "react";
 
 export function PropertyDisplay({ header, size = "" }) {
   const {
     infoSelectedProperty,
+    doStylesUpdatePrefix,
+    doStylesUpdateSuffix,
     doInfoChangeSelectedProperty,
     doClusterChangeStyle,
     doNsiChangeStyle,
@@ -16,6 +19,8 @@ export function PropertyDisplay({ header, size = "" }) {
     stylesNumstoryMap,
   } = useConnect(
     "selectInfoSelectedProperty",
+    "doStylesUpdatePrefix",
+    "doStylesUpdateSuffix",
     "doInfoChangeSelectedProperty",
     "doClusterChangeStyle",
     "doNsiChangeStyle",
@@ -43,17 +48,23 @@ export function PropertyDisplay({ header, size = "" }) {
     },
   };
   const handleChange = (e) => {
-    doInfoChangeSelectedProperty(e.target.value);
-    doClusterChangeStyle(e.target.value);
-    doNsiChangeStyle(e.target.value);
+    const prop = structureProperties[e.target.value];
+    doInfoChangeSelectedProperty(prop);
+    doClusterChangeStyle(prop);
+    doNsiChangeStyle(prop);
   };
   const { Component, props } = CHOICES[infoSelectedProperty];
+  useEffect(() => {
+    doStylesUpdatePrefix(props.prefix ?? "");
+    doStylesUpdateSuffix(props.suffix ?? "");
+  }, [infoSelectedProperty]);
+
   return (
     <InfoItem
       header={header}
       optional={
         <Dropdown
-          items={structureStyles}
+          items={Object.keys(structureProperties)}
           defaultValue={infoSelectedProperty}
           onChange={handleChange}
         />

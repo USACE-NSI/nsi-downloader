@@ -1,4 +1,4 @@
-import { Map } from "./app-components/map.jsx";
+import { Map } from "./app-components/map/map.jsx";
 import { InfoRow } from "./app-components/information-display/info-row.jsx";
 import { InfoItem } from "./app-components/information-display/info-item.jsx";
 import { PropertyDisplay } from "./app-components/information-display/property-display/property-display.jsx";
