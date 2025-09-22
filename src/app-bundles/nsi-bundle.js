@@ -13,16 +13,22 @@ export const actions = {
 export default {
   name: "nsi",
   getReducer: () => {
-    const initialState = { _shouldInit: false, layer: null, isDrawn: false };
+    const initialState = {
+      _shouldInit: false,
+      layer: null,
+      isDrawn: false,
+      geojson: null,
+    };
     return (state = initialState, { type, payload }) => {
       switch (type) {
         case mapActions.INITIALIZED:
-          return { ...state, ...{ _shouldInit: true } };
+          return { ...state, _shouldInit: true };
         case actions.INITIALIZED_START:
         case actions.INITIALIZED:
           return { ...state, ...payload };
         case actions.STRUCTURES_DRAWN:
-          return { ...state, ...{ isDrawn: true } };
+          console.log(payload);
+          return { ...state, ...{ isDrawn: true, geojson: payload.geojson } };
         default:
           return state;
       }
@@ -31,6 +37,7 @@ export default {
   selectNsiLayer: (state) => {
     return state.nsi.layer;
   },
+  selectNsiGeojson: (state) => state.nsi.geojson,
   doNsiInitialize: () => {
     return ({ dispatch }) => {
       dispatch({
@@ -63,6 +70,7 @@ export default {
       store.doNsiChangeStyle(currentSelectedProperty);
       dispatch({
         type: actions.STRUCTURES_DRAWN,
+        payload: { geojson },
       });
     };
   },

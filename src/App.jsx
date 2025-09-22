@@ -3,6 +3,7 @@ import { InfoRow } from "./app-components/information-display/info-row.jsx";
 import { InfoItem } from "./app-components/information-display/info-item.jsx";
 import { PropertyDisplay } from "./app-components/information-display/property-display/property-display.jsx";
 import { useConnect } from "redux-bundler-hook";
+import { DownloadGeoJSONButton } from "./app-components/information-display/download-button.jsx";
 
 function App() {
   const { infoNumStructures } = useConnect("selectInfoNumStructures");
@@ -15,7 +16,11 @@ function App() {
           <div className="text-sm">{infoNumStructures}</div>
         </InfoItem>
         <PropertyDisplay header="Select Display Property: " size="flex-1" />
-        <InfoItem header="Download" size="w-32" />
+        <InfoItem header="Download" size="w-32">
+          <div>
+            <DownloadGeoJSONButton></DownloadGeoJSONButton>
+          </div>
+        </InfoItem>
       </InfoRow>
     </div>
   );
