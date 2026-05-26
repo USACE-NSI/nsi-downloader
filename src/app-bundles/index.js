@@ -4,9 +4,7 @@ import cache from "../cache.js";
 import mapBundle from "./map-bundle.js";
 import nsiBundle from "./nsi-bundle.js";
 import drawBundle from "./draw-bundle.js";
-import clusterBundle from "./cluster-bundle.js";
-import infoBundle from "./information-bundle.js";
-import stylesBundle from "./styles-bundle.js";
+import sidePanelBundle from "./side-panel-bundle.js";
 
 export default composeBundles(
   createUrlBundle(),
@@ -14,7 +12,5 @@ export default composeBundles(
   mapBundle,
   drawBundle,
   nsiBundle,
-  clusterBundle,
-  infoBundle,
-  stylesBundle
+  sidePanelBundle
 );

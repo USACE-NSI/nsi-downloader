@@ -12,6 +12,12 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, ""),
         changeOrigin: true,
       },
+      "/tiles": {
+        target:
+          "https://ml-dev.sec.usace.army.mil/nsi-ml/tileservice/services/nsi-all-pub/tiles",
+        rewrite: (path) => path.replace(/^\/tiles/, ""),
+        changeOrigin: true,
+      },
     },
   },
 });

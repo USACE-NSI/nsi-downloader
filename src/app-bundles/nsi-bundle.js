@@ -1,13 +1,40 @@
 import GeoJSON from "ol/format/GeoJSON.js";
-import VectorSource from "ol/source/Vector.js";
-import { getNewStyle } from "../styles/nsi-style-selector.js";
-import { actions as mapActions } from "./map-bundle.js";
 import VectorLayer from "ol/layer/Vector.js";
+import VectorSource from "ol/source/Vector.js";
+import Style from "ol/style/Style.js";
+import Circle from "ol/style/Circle.js";
+import Fill from "ol/style/Fill.js";
+import Stroke from "ol/style/Stroke.js";
+import { actions as mapActions } from "./map-bundle.js";
+
+const NSI_URL =
+  "/api/structures?bbox=-81.58418,30.25165,-81.58161,30.26939,-81.55898,30.26939,-81.55281,30.24998,-81.58418,30.25165";
+
+const stroke = new Stroke({ color: "#000", width: 1 });
+const styleRes = new Style({
+  image: new Circle({ radius: 4, fill: new Fill({ color: "#2d96ff" }), stroke }),
+});
+const stylePub = new Style({
+  image: new Circle({ radius: 4, fill: new Fill({ color: "#09e40f" }), stroke }),
+});
+const styleInd = new Style({
+  image: new Circle({ radius: 4, fill: new Fill({ color: "#fa3232" }), stroke }),
+});
+const styleCom = new Style({
+  image: new Circle({ radius: 4, fill: new Fill({ color: "#AAA" }), stroke }),
+});
+
+function damcatStyle(feature) {
+  const damcat = feature.get("st_damcat");
+  if (damcat === "RES") return styleRes;
+  if (damcat === "PUB") return stylePub;
+  if (damcat === "IND") return styleInd;
+  return styleCom;
+}
 
 export const actions = {
   INITIALIZED_START: "NSI_INITIALIZED_START",
   INITIALIZED: "NSI_INITIALIZED",
-  STRUCTURES_DRAWN: "NSI_STRUCTURES_DRAWN",
 };
 
 export default {
@@ -16,8 +43,6 @@ export default {
     const initialState = {
       _shouldInit: false,
       layer: null,
-      isDrawn: false,
-      geojson: null,
     };
     return (state = initialState, { type, payload }) => {
       switch (type) {
@@ -26,30 +51,30 @@ export default {
         case actions.INITIALIZED_START:
         case actions.INITIALIZED:
           return { ...state, ...payload };
-        case actions.STRUCTURES_DRAWN:
-          console.log(payload);
-          return { ...state, ...{ isDrawn: true, geojson: payload.geojson } };
         default:
           return state;
       }
     };
   },
-  selectNsiLayer: (state) => {
-    return state.nsi.layer;
-  },
-  selectNsiGeojson: (state) => state.nsi.geojson,
+  selectNsiLayer: (state) => state.nsi.layer,
   doNsiInitialize: () => {
-    return ({ dispatch }) => {
+    return ({ store, dispatch }) => {
       dispatch({
         type: actions.INITIALIZED_START,
         payload: { _shouldInit: false },
       });
       const map = store.selectMapMap();
-      const vectorSource = new VectorSource();
       const layer = new VectorLayer({
-        source: vectorSource,
-        style: getNewStyle(vectorSource, store.selectInfoSelectedProperty())[0],
-        visible: false,
+        declutter: true,
+        source: new VectorSource({
+          attributions: "USACE",
+          url: NSI_URL,
+          format: new GeoJSON({
+            dataProjection: "EPSG:4326",
+            featureProjection: map.getView().getProjection(),
+          }),
+        }),
+        style: damcatStyle,
       });
       map.addLayer(layer);
       dispatch({
@@ -58,45 +83,7 @@ export default {
       });
     };
   },
-  doNsiAddStructures: (bbox) => {
-    return async ({ store, dispatch }) => {
-      const source = store.selectNsiLayer().getSource();
-      const geojson = await GetNSI(`structures?bbox=${bbox}`);
-      const features = new GeoJSON().readFeatures(geojson);
-      source.addFeatures(features);
-      store.doInfoUpdateNumStructures(features.length);
-      const currentSelectedProperty = store.selectInfoSelectedProperty();
-      store.doClusterChangeStyle(currentSelectedProperty);
-      store.doNsiChangeStyle(currentSelectedProperty);
-      dispatch({
-        type: actions.STRUCTURES_DRAWN,
-        payload: { geojson },
-      });
-    };
-  },
-  doNsiChangeStyle: (newProperty) => {
-    return ({ store }) => {
-      const [newStyle, newObj] = getNewStyle(
-        store.selectNsiLayer().getSource(),
-        newProperty
-      );
-      store.selectNsiLayer().setStyle(newStyle);
-      store.doUpdateStyle(newProperty, newObj);
-    };
-  },
   reactNsiShouldInit: (state) => {
     if (state.nsi._shouldInit) return { actionCreator: "doNsiInitialize" };
   },
 };
-
-export async function GetNSI(endpoint) {
-  const url = `api/${endpoint}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status} - ${response.statusText}`);
-  }
-  const geojson = await response.json();
-  return geojson;
-}
-
-// structures?bbox=-81.58418,30.25165,-81.58161,30.26939,-81.55898,30.26939,-81.55281,30.24998,-81.58418,30.25165

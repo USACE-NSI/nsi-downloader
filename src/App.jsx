@@ -1,27 +1,58 @@
+import { useEffect, useState } from "react";
 import { Map } from "./app-components/map/map.jsx";
-import { InfoRow } from "./app-components/information-display/info-row.jsx";
-import { InfoItem } from "./app-components/information-display/info-item.jsx";
-import { PropertyDisplay } from "./app-components/information-display/property-display/property-display.jsx";
-import { useConnect } from "redux-bundler-hook";
-import { DownloadGeoJSONButton } from "./app-components/information-display/download-button.jsx";
+import { SidePanel } from "./app-components/side-panel.jsx";
 
 function App() {
-  const { infoNumStructures } = useConnect("selectInfoNumStructures");
+  const [trayWidth, setTrayWidth] = useState(350);
+  const [isResizing, setIsResizing] = useState(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isResizing) return;
+      const minWidth = 300;
+      const maxWidth = window.innerWidth / 3;
+      const newWidth = Math.min(Math.max(e.clientX, minWidth), maxWidth);
+      setTrayWidth(newWidth);
+    };
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.body.style.cursor = "default";
+    };
+    if (isResizing) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "col-resize";
+    }
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isResizing]);
+
   return (
-    <div className="flex flex-col gap-2 p-2 min-h-screen w-full bg-[#1A1A1A]">
-      <Map></Map>
-      <InfoRow>
-        <InfoItem header="Information">
-          <div className="text-sm">Number of Structues: </div>
-          <div className="text-sm">{infoNumStructures}</div>
-        </InfoItem>
-        <PropertyDisplay header="Select Display Property: " size="flex-1" />
-        <InfoItem header="Download" size="w-32">
-          <div>
-            <DownloadGeoJSONButton></DownloadGeoJSONButton>
-          </div>
-        </InfoItem>
-      </InfoRow>
+    <div className="flex h-screen w-full bg-[#1A1A1A]">
+      <div
+        style={{ width: `${trayWidth}px`, position: "relative" }}
+        className="flex-none border-r border-gray-700"
+      >
+        <SidePanel />
+        <div
+          onMouseDown={() => setIsResizing(true)}
+          style={{
+            position: "absolute",
+            top: 0,
+            right: "-4px",
+            width: "8px",
+            height: "100%",
+            cursor: "col-resize",
+            zIndex: 10,
+            backgroundColor: isResizing ? "#2d96ff" : "transparent",
+          }}
+        />
+      </div>
+      <div className="flex-1">
+        <Map />
+      </div>
     </div>
   );
 }

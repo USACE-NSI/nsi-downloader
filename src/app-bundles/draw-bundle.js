@@ -1,35 +1,37 @@
 import VectorLayer from "ol/layer/Vector.js";
 import VectorSource from "ol/source/Vector.js";
-import Draw, { createBox } from "ol/interaction/Draw";
+import Draw from "ol/interaction/Draw";
 import Modify from "ol/interaction/Modify";
 import Snap from "ol/interaction/Snap";
 import { Style, Fill, Stroke } from "ol/style";
+import { toLonLat } from "ol/proj";
 import { actions as mapActions } from "./map-bundle.js";
 
 const actions = {
   INITIALIZED_START: "DRAW_INITIALIZED_START",
   INITIALIZED: "DRAW_INITIALIZED",
+  BBOX_UPDATED: "DRAW_BBOX_UPDATED",
 };
 
 export default {
   name: "draw",
   getReducer: () => {
-    const initialState = { _shouldInit: false, layer: null };
+    const initialState = { _shouldInit: false, layer: null, bbox: null };
     return (state = initialState, { type, payload }) => {
       switch (type) {
         case mapActions.INITIALIZED:
-          return { ...state, ...{ _shouldInit: true } };
+          return { ...state, _shouldInit: true };
         case actions.INITIALIZED_START:
         case actions.INITIALIZED:
+        case actions.BBOX_UPDATED:
           return { ...state, ...payload };
         default:
           return state;
       }
     };
   },
-  selectDrawLayer: (state) => {
-    return state.nsi.layer;
-  },
+  selectDrawLayer: (state) => state.draw.layer,
+  selectDrawBbox: (state) => state.draw.bbox,
   doDrawInitialize: () => {
     return ({ store, dispatch }) => {
       dispatch({
@@ -58,8 +60,11 @@ export default {
 
       draw.on("drawend", (e) => {
         const coords = e.feature.getGeometry().getCoordinates()[0];
-        const bbox = coords.map((coord) => `${coord[0]},${coord[1]}`).join(",");
-        store.doNsiAddStructures(bbox);
+        const bbox = coords
+          .map((coord) => toLonLat(coord))
+          .map(([lon, lat]) => `${lon},${lat}`)
+          .join(",");
+        dispatch({ type: actions.BBOX_UPDATED, payload: { bbox } });
         map.removeInteraction(draw);
         map.removeInteraction(mod);
         map.removeInteraction(snap);
