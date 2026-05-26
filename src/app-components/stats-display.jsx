@@ -90,7 +90,7 @@ function StringStats({ stats, scheme }) {
       </div>
       <div className="flex flex-col gap-1">
         <div className="text-sm text-gray-400">Values</div>
-        <div className="flex flex-col gap-0.5 max-h-36 overflow-y-auto pr-1 pl-1">
+        <div className="flex flex-col gap-0.5 max-h-36 overflow-y-auto pr-3 pl-1 scrollbar-dark">
           {sorted.map(({ value, count }) => (
             <div
               key={value}
