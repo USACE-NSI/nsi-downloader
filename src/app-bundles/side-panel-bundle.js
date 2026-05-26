@@ -1,6 +1,6 @@
 import { actions as nsiActions } from "./nsi-bundle.js";
 
-const actions = {
+export const actions = {
   INITIALIZED_START: "SIDE_PANEL_INITIALIZED_START",
   INITIALIZED: "SIDE_PANEL_INITIALIZED",
   STATS_COMPUTED: "SIDE_PANEL_STATS_COMPUTED",

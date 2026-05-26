@@ -5,6 +5,7 @@ import mapBundle from "./map-bundle.js";
 import nsiBundle from "./nsi-bundle.js";
 import drawBundle from "./draw-bundle.js";
 import sidePanelBundle from "./side-panel-bundle.js";
+import stylesBundle from "./styles-bundle.js";
 
 export default composeBundles(
   createUrlBundle(),
@@ -12,5 +13,6 @@ export default composeBundles(
   mapBundle,
   drawBundle,
   nsiBundle,
-  sidePanelBundle
+  sidePanelBundle,
+  stylesBundle
 );
