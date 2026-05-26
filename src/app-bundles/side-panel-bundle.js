@@ -118,7 +118,13 @@ export default {
       const recompute = () => {
         const features = source.getFeatures();
         const stats = computeStatsFromFeatures(features);
-        dispatch({ type: actions.STATS_COMPUTED, payload: { stats } });
+        const payload = { stats };
+        const currentSelected = store.selectSidePanelSelectedProperty();
+        const names = Object.keys(stats);
+        if (!currentSelected && names.length > 0) {
+          payload.selectedProperty = names[0];
+        }
+        dispatch({ type: actions.STATS_COMPUTED, payload });
       };
       source.on("featuresloadend", recompute);
       if (source.getFeatures().length > 0) recompute();
