@@ -19,8 +19,9 @@ export default {
     const initialState = { _shouldInit: false, layer: null, bbox: null };
     return (state = initialState, { type, payload }) => {
       switch (type) {
-        case mapActions.INITIALIZED:
-          return { ...state, _shouldInit: true };
+        // Temporarily disabled — polygon drawing turned off.
+        // case mapActions.INITIALIZED:
+        //   return { ...state, _shouldInit: true };
         case actions.INITIALIZED_START:
         case actions.INITIALIZED:
         case actions.BBOX_UPDATED:

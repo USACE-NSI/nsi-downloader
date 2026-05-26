@@ -3,6 +3,7 @@ import Circle from "ol/style/Circle.js";
 import Fill from "ol/style/Fill.js";
 import Stroke from "ol/style/Stroke.js";
 import { actions as sidePanelActions } from "./side-panel-bundle.js";
+import { actions as selectionActions } from "./selection-bundle.js";
 
 const FALLBACK_COLOR = "#888888";
 const DISCRETE_PALETTE = [
@@ -133,17 +134,25 @@ function buildScheme(features, property) {
     : buildStringScheme(property, values);
 }
 
-function makeStyleFn(scheme) {
+function makeStyleFn(scheme, selectedId) {
   const stroke = new Stroke({ color: "#000", width: 1 });
+  const highlightStroke = new Stroke({ color: "#000000", width: 3 });
   const cache = new Map();
   return (feature) => {
+    const isSelected = selectedId != null && feature.getId() === selectedId;
     const color = scheme.colorFor(feature.get(scheme.property));
-    let style = cache.get(color);
+    const key = isSelected ? `${color}!sel` : color;
+    let style = cache.get(key);
     if (!style) {
       style = new Style({
-        image: new Circle({ radius: 4, fill: new Fill({ color }), stroke }),
+        image: new Circle({
+          radius: isSelected ? 7 : 4,
+          fill: new Fill({ color }),
+          stroke: isSelected ? highlightStroke : stroke,
+        }),
+        zIndex: isSelected ? 1 : 0,
       });
-      cache.set(color, style);
+      cache.set(key, style);
     }
     return style;
   };
@@ -156,12 +165,19 @@ export default {
       _shouldRebuild: false,
       builtProperty: null,
       scheme: null,
+      selectionId: null,
     };
     return (state = initialState, { type, payload }) => {
       switch (type) {
         case sidePanelActions.STATS_COMPUTED:
         case sidePanelActions.PROPERTY_SELECTED:
           return { ...state, _shouldRebuild: true };
+        case selectionActions.FEATURE_SELECTED:
+          return {
+            ...state,
+            _shouldRebuild: true,
+            selectionId: payload?.id ?? null,
+          };
         case actions.REBUILD_REQUESTED:
         case actions.REBUILT:
           return { ...state, ...payload };
@@ -184,7 +200,8 @@ export default {
       const features = layer.getSource().getFeatures();
       const scheme = buildScheme(features, property);
       if (!scheme) return;
-      layer.setStyle(makeStyleFn(scheme));
+      const selectionId = store.selectSelectionId();
+      layer.setStyle(makeStyleFn(scheme, selectionId));
       dispatch({
         type: actions.REBUILT,
         payload: { builtProperty: property, scheme },

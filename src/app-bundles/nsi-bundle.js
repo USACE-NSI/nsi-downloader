@@ -76,6 +76,14 @@ export default {
         }),
         style: damcatStyle,
       });
+      layer.getSource().on("featuresloadend", () => {
+        for (const f of layer.getSource().getFeatures()) {
+          if (f.getId() === undefined) {
+            const fdId = f.get("fd_id");
+            if (fdId !== undefined) f.setId(fdId);
+          }
+        }
+      });
       map.addLayer(layer);
       dispatch({
         type: actions.INITIALIZED,

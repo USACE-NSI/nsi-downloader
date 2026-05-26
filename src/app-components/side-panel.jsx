@@ -1,6 +1,7 @@
 import { useConnect } from "redux-bundler-hook";
 import { DownloadGeoJSONButton } from "./download-button.jsx";
 import { StatsDisplay } from "./stats-display.jsx";
+import { FeatureDetails } from "./feature-details.jsx";
 
 export function SidePanel() {
   const {
@@ -40,6 +41,7 @@ export function SidePanel() {
           </select>
         </div>
         <StatsDisplay />
+        <FeatureDetails />
       </div>
     </div>
   );
