@@ -7,24 +7,33 @@ import { Style, Fill, Stroke } from "ol/style";
 import { toLonLat } from "ol/proj";
 import { actions as mapActions } from "./map-bundle.js";
 
-const actions = {
+export const actions = {
   INITIALIZED_START: "DRAW_INITIALIZED_START",
   INITIALIZED: "DRAW_INITIALIZED",
+  STARTED: "DRAW_STARTED",
   BBOX_UPDATED: "DRAW_BBOX_UPDATED",
+  CLEARED: "DRAW_CLEARED",
 };
 
 export default {
   name: "draw",
   getReducer: () => {
-    const initialState = { _shouldInit: false, layer: null, bbox: null };
+    const initialState = {
+      _shouldInit: false,
+      layer: null,
+      source: null,
+      bbox: null,
+      drawing: false,
+    };
     return (state = initialState, { type, payload }) => {
       switch (type) {
-        // Temporarily disabled — polygon drawing turned off.
-        // case mapActions.INITIALIZED:
-        //   return { ...state, _shouldInit: true };
+        case mapActions.INITIALIZED:
+          return { ...state, _shouldInit: true };
         case actions.INITIALIZED_START:
         case actions.INITIALIZED:
+        case actions.STARTED:
         case actions.BBOX_UPDATED:
+        case actions.CLEARED:
           return { ...state, ...payload };
         default:
           return state;
@@ -32,7 +41,9 @@ export default {
     };
   },
   selectDrawLayer: (state) => state.draw.layer,
+  selectDrawSource: (state) => state.draw.source,
   selectDrawBbox: (state) => state.draw.bbox,
+  selectDrawDrawing: (state) => state.draw.drawing,
   doDrawInitialize: () => {
     return ({ store, dispatch }) => {
       dispatch({
@@ -49,28 +60,49 @@ export default {
         }),
       });
       map.addLayer(polyLayer);
-      const draw = new Draw({
-        source: polySource,
-        type: "Polygon",
+      dispatch({
+        type: actions.INITIALIZED,
+        payload: { layer: polyLayer, source: polySource },
       });
+    };
+  },
+  doDrawStart: () => {
+    return ({ store, dispatch }) => {
+      const map = store.selectMapMap();
+      const polySource = store.selectDrawSource();
+      if (!map || !polySource) return;
+      polySource.clear();
+      const draw = new Draw({ source: polySource, type: "Polygon" });
       const mod = new Modify({ source: polySource });
       const snap = new Snap({ source: polySource });
       map.addInteraction(draw);
       map.addInteraction(mod);
       map.addInteraction(snap);
-
       draw.on("drawend", (e) => {
         const coords = e.feature.getGeometry().getCoordinates()[0];
         const bbox = coords
           .map((coord) => toLonLat(coord))
           .map(([lon, lat]) => `${lon},${lat}`)
           .join(",");
-        dispatch({ type: actions.BBOX_UPDATED, payload: { bbox } });
         map.removeInteraction(draw);
         map.removeInteraction(mod);
         map.removeInteraction(snap);
+        dispatch({
+          type: actions.BBOX_UPDATED,
+          payload: { bbox, drawing: false },
+        });
       });
-      dispatch({ type: actions.INITIALIZED, payload: { layer: polyLayer } });
+      dispatch({ type: actions.STARTED, payload: { drawing: true } });
+    };
+  },
+  doDrawClear: () => {
+    return ({ store, dispatch }) => {
+      const polySource = store.selectDrawSource();
+      if (polySource) polySource.clear();
+      dispatch({
+        type: actions.CLEARED,
+        payload: { bbox: null, drawing: false },
+      });
     };
   },
   reactDrawShouldInit: (state) => {

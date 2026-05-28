@@ -37,8 +37,8 @@ export default {
           ],
           target: target,
           view: new View({
-            // center: fromLonLat([-122.4444, 37.7749]), // San Francisco
-            center: fromLonLat([-81.5685, 30.2597]),
+            center: fromLonLat([-122.4444, 37.7749]), // San Francisco
+            // center: fromLonLat([-81.5685, 30.2597]),
             zoom: 15,
           }),
         });

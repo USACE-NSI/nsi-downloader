@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Map } from "./app-components/map/map.jsx";
 import { SidePanel } from "./app-components/side-panel.jsx";
+import { QueryToolbar } from "./app-components/query-toolbar.jsx";
 
 function App() {
   const [trayWidth, setTrayWidth] = useState(350);
@@ -50,8 +51,11 @@ function App() {
           }}
         />
       </div>
-      <div className="flex-1">
-        <Map />
+      <div className="flex-1 flex flex-col min-w-0">
+        <QueryToolbar />
+        <div className="flex-1 min-h-0">
+          <Map />
+        </div>
       </div>
     </div>
   );

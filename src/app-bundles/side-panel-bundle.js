@@ -3,8 +3,11 @@ import { actions as nsiActions } from "./nsi-bundle.js";
 export const actions = {
   INITIALIZED_START: "SIDE_PANEL_INITIALIZED_START",
   INITIALIZED: "SIDE_PANEL_INITIALIZED",
-  STATS_COMPUTED: "SIDE_PANEL_STATS_COMPUTED",
+  PROPERTIES_LISTED: "SIDE_PANEL_PROPERTIES_LISTED",
   PROPERTY_SELECTED: "SIDE_PANEL_PROPERTY_SELECTED",
+  COMPUTE_STARTED: "SIDE_PANEL_COMPUTE_STARTED",
+  STATS_COMPUTED: "SIDE_PANEL_STATS_COMPUTED",
+  COMPUTE_ABORTED: "SIDE_PANEL_COMPUTE_ABORTED",
 };
 
 function computeNumericStats(values) {
@@ -55,7 +58,9 @@ function computeStringStats(values) {
 }
 
 function computeStatsForProperty(values) {
-  const nonNull = values.filter((v) => v !== null && v !== undefined && v !== "");
+  const nonNull = values.filter(
+    (v) => v !== null && v !== undefined && v !== "",
+  );
   if (nonNull.length === 0) return { kind: "empty", count: 0 };
   const allNumeric = nonNull.every((v) => Number.isFinite(Number(v)));
   return allNumeric
@@ -63,21 +68,11 @@ function computeStatsForProperty(values) {
     : computeStringStats(nonNull);
 }
 
-function computeStatsFromFeatures(features) {
-  const propMap = new Map();
-  for (const feat of features) {
-    const props = feat.getProperties();
-    for (const [key, val] of Object.entries(props)) {
-      if (key === "geometry") continue;
-      if (!propMap.has(key)) propMap.set(key, []);
-      propMap.get(key).push(val);
-    }
-  }
-  const stats = {};
-  for (const [key, values] of propMap) {
-    stats[key] = computeStatsForProperty(values);
-  }
-  return stats;
+// All NSI features share the same schema, so one feature is enough.
+function extractPropertyNames(features) {
+  if (features.length === 0) return [];
+  const props = features[0].getProperties();
+  return Object.keys(props).filter((k) => k !== "geometry");
 }
 
 export default {
@@ -85,27 +80,52 @@ export default {
   getReducer: () => {
     const initialState = {
       _shouldInit: false,
+      propertyNames: [],
       stats: {},
       selectedProperty: null,
+      computing: false,
     };
     return (state = initialState, { type, payload }) => {
       switch (type) {
         case nsiActions.INITIALIZED:
           return { ...state, _shouldInit: true };
+        case nsiActions.CLEARED:
+          return {
+            ...state,
+            propertyNames: [],
+            stats: {},
+            selectedProperty: null,
+            computing: false,
+          };
+        case actions.PROPERTIES_LISTED:
+          return {
+            ...state,
+            propertyNames: payload.propertyNames,
+            selectedProperty: payload.selectedProperty,
+            stats: {},
+            computing: false,
+          };
+        case actions.STATS_COMPUTED:
+          return {
+            ...state,
+            stats: { ...state.stats, ...payload.stats },
+            computing: false,
+          };
         case actions.INITIALIZED_START:
         case actions.INITIALIZED:
-        case actions.STATS_COMPUTED:
         case actions.PROPERTY_SELECTED:
+        case actions.COMPUTE_STARTED:
+        case actions.COMPUTE_ABORTED:
           return { ...state, ...payload };
         default:
           return state;
       }
     };
   },
+  selectSidePanelPropertyNames: (state) => state.sidePanel.propertyNames,
   selectSidePanelStats: (state) => state.sidePanel.stats,
   selectSidePanelSelectedProperty: (state) => state.sidePanel.selectedProperty,
-  selectSidePanelPropertyNames: (state) =>
-    Object.keys(state.sidePanel.stats || {}),
+  selectSidePanelComputing: (state) => state.sidePanel.computing,
   doSidePanelInitialize: () => {
     return ({ store, dispatch }) => {
       dispatch({
@@ -115,19 +135,27 @@ export default {
       const layer = store.selectNsiLayer();
       if (!layer) return;
       const source = layer.getSource();
-      const recompute = () => {
+      const handleFeaturesLoaded = () => {
         const features = source.getFeatures();
-        const stats = computeStatsFromFeatures(features);
-        const payload = { stats };
-        const currentSelected = store.selectSidePanelSelectedProperty();
-        const names = Object.keys(stats);
-        if (!currentSelected && names.length > 0) {
-          payload.selectedProperty = names[0];
+        if (features.length === 0) {
+          dispatch({
+            type: actions.PROPERTIES_LISTED,
+            payload: { propertyNames: [], selectedProperty: null },
+          });
+          return;
         }
-        dispatch({ type: actions.STATS_COMPUTED, payload });
+        const propertyNames = extractPropertyNames(features);
+        const selectedProperty =
+          propertyNames.find((n) => n === "occtype") ??
+          propertyNames[0] ??
+          null;
+        dispatch({
+          type: actions.PROPERTIES_LISTED,
+          payload: { propertyNames, selectedProperty },
+        });
       };
-      source.on("featuresloadend", recompute);
-      if (source.getFeatures().length > 0) recompute();
+      source.on("featuresloadend", handleFeaturesLoaded);
+      if (source.getFeatures().length > 0) handleFeaturesLoaded();
       dispatch({ type: actions.INITIALIZED, payload: {} });
     };
   },
@@ -135,8 +163,53 @@ export default {
     type: actions.PROPERTY_SELECTED,
     payload: { selectedProperty: property },
   }),
+  doSidePanelComputeSelected: () => {
+    return ({ store, dispatch }) => {
+      const property = store.selectSidePanelSelectedProperty();
+      if (!property) return;
+      const layer = store.selectNsiLayer();
+      if (!layer) return;
+      const features = layer.getSource().getFeatures();
+      if (features.length === 0) return;
+      dispatch({
+        type: actions.COMPUTE_STARTED,
+        payload: { computing: true },
+      });
+      // Yield to the browser before scanning all features for this property.
+      setTimeout(() => {
+        if (store.selectSidePanelSelectedProperty() !== property) {
+          dispatch({
+            type: actions.COMPUTE_ABORTED,
+            payload: { computing: false },
+          });
+          return;
+        }
+        const live = layer.getSource().getFeatures();
+        if (live.length === 0) {
+          dispatch({
+            type: actions.COMPUTE_ABORTED,
+            payload: { computing: false },
+          });
+          return;
+        }
+        const values = live.map((f) => f.get(property));
+        const propStats = computeStatsForProperty(values);
+        dispatch({
+          type: actions.STATS_COMPUTED,
+          payload: { stats: { [property]: propStats } },
+        });
+      }, 0);
+    };
+  },
   reactSidePanelShouldInit: (state) => {
     if (state.sidePanel._shouldInit)
       return { actionCreator: "doSidePanelInitialize" };
+  },
+  reactSidePanelShouldCompute: (state) => {
+    const s = state.sidePanel;
+    if (!s.selectedProperty) return;
+    if (s.stats[s.selectedProperty]) return;
+    if (s.computing) return;
+    return { actionCreator: "doSidePanelComputeSelected" };
   },
 };

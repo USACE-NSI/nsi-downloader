@@ -14,6 +14,8 @@ export default {
       switch (type) {
         case nsiActions.INITIALIZED:
           return { ...state, _shouldInit: true };
+        case nsiActions.CLEARED:
+          return { ...state, properties: null, id: null };
         case actions.INITIALIZED_START:
         case actions.INITIALIZED:
         case actions.FEATURE_SELECTED:
@@ -59,7 +61,7 @@ export default {
           const { geometry, ...rest } = picked.getProperties();
           dispatch({
             type: actions.FEATURE_SELECTED,
-            payload: { properties: rest, id: picked.getId() ?? null },
+            payload: { properties: rest, id: picked.get("fd_id") ?? null },
           });
         } else {
           dispatch({

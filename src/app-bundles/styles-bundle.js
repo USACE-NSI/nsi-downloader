@@ -4,6 +4,7 @@ import Fill from "ol/style/Fill.js";
 import Stroke from "ol/style/Stroke.js";
 import { actions as sidePanelActions } from "./side-panel-bundle.js";
 import { actions as selectionActions } from "./selection-bundle.js";
+import { actions as nsiActions } from "./nsi-bundle.js";
 
 const FALLBACK_COLOR = "#888888";
 const DISCRETE_PALETTE = [
@@ -139,7 +140,8 @@ function makeStyleFn(scheme, selectedId) {
   const highlightStroke = new Stroke({ color: "#000000", width: 3 });
   const cache = new Map();
   return (feature) => {
-    const isSelected = selectedId != null && feature.getId() === selectedId;
+    const isSelected =
+      selectedId != null && feature.get("fd_id") === selectedId;
     const color = scheme.colorFor(feature.get(scheme.property));
     const key = isSelected ? `${color}!sel` : color;
     let style = cache.get(key);
@@ -177,6 +179,14 @@ export default {
             ...state,
             _shouldRebuild: true,
             selectionId: payload?.id ?? null,
+          };
+        case nsiActions.CLEARED:
+          return {
+            ...state,
+            _shouldRebuild: false,
+            builtProperty: null,
+            scheme: null,
+            selectionId: null,
           };
         case actions.REBUILD_REQUESTED:
         case actions.REBUILT:

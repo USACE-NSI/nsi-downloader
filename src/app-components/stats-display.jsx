@@ -115,16 +115,29 @@ function StringStats({ stats, scheme }) {
 }
 
 export function StatsDisplay() {
-  const { sidePanelStats, sidePanelSelectedProperty, stylesScheme } =
-    useConnect(
-      "selectSidePanelStats",
-      "selectSidePanelSelectedProperty",
-      "selectStylesScheme",
-    );
+  const {
+    sidePanelStats,
+    sidePanelSelectedProperty,
+    sidePanelComputing,
+    stylesScheme,
+  } = useConnect(
+    "selectSidePanelStats",
+    "selectSidePanelSelectedProperty",
+    "selectSidePanelComputing",
+    "selectStylesScheme",
+  );
 
   if (!sidePanelSelectedProperty) return null;
   const stats = sidePanelStats[sidePanelSelectedProperty];
-  if (!stats) return null;
+
+  if (!stats) {
+    return (
+      <div className="flex items-center gap-2 p-3 rounded-md bg-gray-800/60 text-sm text-gray-400 italic">
+        <span className="inline-block w-3 h-3 rounded-full border-2 border-gray-400 border-t-transparent animate-spin" />
+        {sidePanelComputing ? "Computing stats…" : "Waiting…"}
+      </div>
+    );
+  }
 
   const scheme =
     stylesScheme && stylesScheme.property === sidePanelSelectedProperty
