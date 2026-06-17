@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Map } from "./app-components/map/map.jsx";
-import { SidePanel } from "./app-components/side-panel.jsx";
+import { Map } from "./app-components/map.jsx";
+import { SidePanel } from "./app-components/side-panel/side-panel.jsx";
 import { QueryToolbar } from "./app-components/query-toolbar.jsx";
 
 function App() {

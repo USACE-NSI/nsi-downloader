@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import createStore from "./app-bundles/index.js";
 import { ReduxBundlerProvider } from "redux-bundler-hook";
 import cache from "./cache.js";
-import "./styles/index.css";
+import "./index.css";
 import App from "./App.jsx";
 
 cache.getAll().then((data) => {
