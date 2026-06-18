@@ -4,9 +4,10 @@ import { useConnect } from "redux-bundler-hook";
 import shp from "shpjs";
 
 export function ShapezipUpload() {
-  const { doNsiSetBbox, doDrawShowPolygons } = useConnect(
-    "doNsiSetBbox",
-    "doDrawShowPolygons",
+  const { doNsiAddBbox, doDrawAddPolygons, nsiBbox } = useConnect(
+    "doNsiAddBbox",
+    "doDrawAddPolygons",
+    "selectNsiBbox",
   );
   const fileInputRef = useRef(null);
 
@@ -17,15 +18,22 @@ export function ShapezipUpload() {
     try {
       const geojson = await shp(await file.arrayBuffer());
 
-      const rings = geojson.features.map((feature) => {
-        // coordinates[0] represents coordinates for the first polygon in this feature
-        // array of [lon, lat] arrays
+      // skip rings already in bbox so re-uploading the same shapezip is a no-op.
+      const newFeatures = [];
+      const newRings = [];
+      for (const feature of geojson.features) {
+        // coordinates[0] is the outer ring: array of [lon, lat]
         const coords = feature.geometry.coordinates[0];
-        return coords.map(([lon, lat]) => `${lon},${lat}`).join(",");
-      });
-      // TODO: validate polygons (turf) -> one NSI request per polygon -> merge by fd_id
-      doNsiSetBbox(rings);
-      doDrawShowPolygons(geojson);
+        const ring = coords.map(([lon, lat]) => `${lon},${lat}`).join(",");
+        if (nsiBbox.includes(ring) || newRings.includes(ring)) continue;
+        newRings.push(ring);
+        newFeatures.push(feature);
+      }
+      if (newRings.length === 0) return;
+
+      // TODO: validate polygons (turf) before adding
+      doNsiAddBbox(newRings);
+      doDrawAddPolygons({ type: "FeatureCollection", features: newFeatures });
     } catch (err) {
       console.error("Failed to read shapefile:", err);
     }

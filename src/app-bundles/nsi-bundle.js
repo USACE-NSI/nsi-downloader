@@ -30,7 +30,7 @@ export const actions = {
   LOAD_STARTED: "NSI_LOAD_STARTED",
   LOAD_FINISHED: "NSI_LOAD_FINISHED",
   LOAD_ERRORED: "NSI_LOAD_ERRORED",
-  BBOX_SET: "NSI_BBOX_SET",
+  BBOX_ADD: "NSI_BBOX_ADD",
   CLEARED: "NSI_CLEARED",
 };
 
@@ -49,8 +49,8 @@ export default {
       switch (type) {
         case mapActions.INITIALIZED:
           return { ...state, _shouldInit: true };
-        case actions.BBOX_SET:
-          return { ...state, bbox: payload?.bbox ?? [] };
+        case actions.BBOX_ADD:
+          return { ...state, bbox: [...state.bbox, ...payload.rings] };
         case drawActions.CLEARED:
           return { ...state, _shouldClear: true, bbox: [] };
         case actions.INITIALIZED_START:
@@ -69,7 +69,7 @@ export default {
   selectNsiBbox: (state) => state.nsi.bbox,
   selectNsiLoading: (state) => state.nsi.loading,
   selectNsiLoadError: (state) => state.nsi.loadError,
-  doNsiSetBbox: (bbox) => ({ type: actions.BBOX_SET, payload: { bbox } }),
+  doNsiAddBbox: (rings) => ({ type: actions.BBOX_ADD, payload: { rings } }),
   doNsiInitialize: () => {
     return ({ store, dispatch }) => {
       dispatch({

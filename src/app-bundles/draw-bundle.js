@@ -72,7 +72,6 @@ export default {
       const map = store.selectMapMap();
       const polySource = store.selectDrawSource();
       if (!map || !polySource) return;
-      polySource.clear();
       const draw = new Draw({ source: polySource, type: "Polygon" });
       const mod = new Modify({ source: polySource });
       const snap = new Snap({ source: polySource });
@@ -88,13 +87,13 @@ export default {
         map.removeInteraction(draw);
         map.removeInteraction(mod);
         map.removeInteraction(snap);
-        store.doNsiSetBbox([bbox]);
+        store.doNsiAddBbox([bbox]);
         dispatch({ type: actions.FINISHED, payload: { drawing: false } });
       });
       dispatch({ type: actions.STARTED, payload: { drawing: true } });
     };
   },
-  doDrawShowPolygons: (geojson) => {
+  doDrawAddPolygons: (geojson) => {
     return ({ store }) => {
       const map = store.selectMapMap();
       const polySource = store.selectDrawSource();
@@ -103,7 +102,6 @@ export default {
         dataProjection: "EPSG:4326",
         featureProjection: map.getView().getProjection(),
       });
-      polySource.clear();
       polySource.addFeatures(features);
       if (features.length > 0) {
         map.getView().fit(polySource.getExtent(), {
