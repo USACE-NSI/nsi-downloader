@@ -1,8 +1,7 @@
 import { actions as nsiActions } from "./nsi-bundle.js";
 
 export const actions = {
-  INITIALIZED_START: "SIDE_PANEL_INITIALIZED_START",
-  INITIALIZED: "SIDE_PANEL_INITIALIZED",
+  LIST_REQUESTED: "SIDE_PANEL_LIST_REQUESTED",
   PROPERTIES_LISTED: "SIDE_PANEL_PROPERTIES_LISTED",
   PROPERTY_SELECTED: "SIDE_PANEL_PROPERTY_SELECTED",
   COMPUTE_STARTED: "SIDE_PANEL_COMPUTE_STARTED",
@@ -79,7 +78,7 @@ export default {
   name: "sidePanel",
   getReducer: () => {
     const initialState = {
-      _shouldInit: false,
+      _shouldList: false,
       propertyNames: [],
       stats: {},
       selectedProperty: null,
@@ -87,8 +86,8 @@ export default {
     };
     return (state = initialState, { type, payload }) => {
       switch (type) {
-        case nsiActions.INITIALIZED:
-          return { ...state, _shouldInit: true };
+        case nsiActions.LOAD_FINISHED:
+          return { ...state, _shouldList: true };
         case nsiActions.CLEARED:
           return {
             ...state,
@@ -111,8 +110,7 @@ export default {
             stats: { ...state.stats, ...payload.stats },
             computing: false,
           };
-        case actions.INITIALIZED_START:
-        case actions.INITIALIZED:
+        case actions.LIST_REQUESTED:
         case actions.PROPERTY_SELECTED:
         case actions.COMPUTE_STARTED:
         case actions.COMPUTE_ABORTED:
@@ -126,37 +124,28 @@ export default {
   selectSidePanelStats: (state) => state.sidePanel.stats,
   selectSidePanelSelectedProperty: (state) => state.sidePanel.selectedProperty,
   selectSidePanelComputing: (state) => state.sidePanel.computing,
-  doSidePanelInitialize: () => {
+  doSidePanelListProperties: () => {
     return ({ store, dispatch }) => {
       dispatch({
-        type: actions.INITIALIZED_START,
-        payload: { _shouldInit: false },
+        type: actions.LIST_REQUESTED,
+        payload: { _shouldList: false },
       });
       const layer = store.selectNsiLayer();
-      if (!layer) return;
-      const source = layer.getSource();
-      const handleFeaturesLoaded = () => {
-        const features = source.getFeatures();
-        if (features.length === 0) {
-          dispatch({
-            type: actions.PROPERTIES_LISTED,
-            payload: { propertyNames: [], selectedProperty: null },
-          });
-          return;
-        }
-        const propertyNames = extractPropertyNames(features);
-        const selectedProperty =
-          propertyNames.find((n) => n === "occtype") ??
-          propertyNames[0] ??
-          null;
+      const features = layer ? layer.getSource().getFeatures() : [];
+      if (features.length === 0) {
         dispatch({
           type: actions.PROPERTIES_LISTED,
-          payload: { propertyNames, selectedProperty },
+          payload: { propertyNames: [], selectedProperty: null },
         });
-      };
-      source.on("featuresloadend", handleFeaturesLoaded);
-      if (source.getFeatures().length > 0) handleFeaturesLoaded();
-      dispatch({ type: actions.INITIALIZED, payload: {} });
+        return;
+      }
+      const propertyNames = extractPropertyNames(features);
+      const selectedProperty =
+        propertyNames.find((n) => n === "occtype") ?? propertyNames[0] ?? null;
+      dispatch({
+        type: actions.PROPERTIES_LISTED,
+        payload: { propertyNames, selectedProperty },
+      });
     };
   },
   doSidePanelSelectProperty: (property) => ({
@@ -201,9 +190,9 @@ export default {
       }, 0);
     };
   },
-  reactSidePanelShouldInit: (state) => {
-    if (state.sidePanel._shouldInit)
-      return { actionCreator: "doSidePanelInitialize" };
+  reactSidePanelShouldList: (state) => {
+    if (state.sidePanel._shouldList)
+      return { actionCreator: "doSidePanelListProperties" };
   },
   reactSidePanelShouldCompute: (state) => {
     const s = state.sidePanel;

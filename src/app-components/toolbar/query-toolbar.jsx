@@ -32,20 +32,24 @@ export function QueryToolbar() {
   const {
     nsiBbox,
     drawDrawing,
+    drawVisible,
     nsiLoading,
     nsiLoadError,
     sidePanelComputing,
     doDrawStart,
     doDrawClear,
+    doDrawSetVisible,
     doNsiRefresh,
   } = useConnect(
     "selectNsiBbox",
     "selectDrawDrawing",
+    "selectDrawVisible",
     "selectNsiLoading",
     "selectNsiLoadError",
     "selectSidePanelComputing",
     "doDrawStart",
     "doDrawClear",
+    "doDrawSetVisible",
     "doNsiRefresh",
   );
 
@@ -70,6 +74,18 @@ export function QueryToolbar() {
         {drawDrawing ? "Drawing…" : "Draw Polygon"}
       </ToolbarButton>
       <ShapezipUpload />
+      <label
+        className="flex items-center gap-1.5 text-xs text-gray-300 cursor-pointer select-none"
+        title="Show or hide the drawn query polygons on the map"
+      >
+        <input
+          type="checkbox"
+          checked={drawVisible}
+          onChange={(e) => doDrawSetVisible(e.target.checked)}
+          className="accent-blue-500"
+        />
+        Show query area
+      </label>
       <div className="flex-1" />
       {status && (
         <span className="flex items-center gap-2 text-xs text-blue-300">

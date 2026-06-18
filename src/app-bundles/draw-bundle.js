@@ -16,6 +16,7 @@ export const actions = {
   STARTED: "DRAW_STARTED",
   FINISHED: "DRAW_FINISHED",
   CLEARED: "DRAW_CLEARED",
+  VISIBILITY_SET: "DRAW_VISIBILITY_SET",
 };
 
 export default {
@@ -26,6 +27,7 @@ export default {
       layer: null,
       source: null,
       drawing: false,
+      visible: true,
     };
     return (state = initialState, { type, payload }) => {
       switch (type) {
@@ -36,6 +38,7 @@ export default {
         case actions.STARTED:
         case actions.FINISHED:
         case actions.CLEARED:
+        case actions.VISIBILITY_SET:
           return { ...state, ...payload };
         default:
           return state;
@@ -45,6 +48,7 @@ export default {
   selectDrawLayer: (state) => state.draw.layer,
   selectDrawSource: (state) => state.draw.source,
   selectDrawDrawing: (state) => state.draw.drawing,
+  selectDrawVisible: (state) => state.draw.visible,
   doDrawInitialize: () => {
     return ({ store, dispatch }) => {
       dispatch({
@@ -119,6 +123,13 @@ export default {
         type: actions.CLEARED,
         payload: { drawing: false },
       });
+    };
+  },
+  doDrawSetVisible: (visible) => {
+    return ({ store, dispatch }) => {
+      const layer = store.selectDrawLayer();
+      if (layer) layer.setVisible(visible);
+      dispatch({ type: actions.VISIBILITY_SET, payload: { visible } });
     };
   },
   reactDrawShouldInit: (state) => {
