@@ -8,7 +8,8 @@ export function Map() {
     "doNsiLoadShapezip",
   );
   const el = useRef();
-  // Drag events fire per child element, so count enters/leaves to avoid flicker.
+  // Drag events fire per child element, so count enters/leaves to avoid flicker
+  // useRef instead of useState because we do not want to cause rerenders when this changes
   const dragDepth = useRef(0);
   const [dragging, setDragging] = useState(false);
 
@@ -19,10 +20,12 @@ export function Map() {
 
   const handleDragEnter = (e) => {
     e.preventDefault();
+    // entering a new element
     dragDepth.current += 1;
     setDragging(true);
   };
   const handleDragLeave = () => {
+    // leaving current element
     dragDepth.current -= 1;
     if (dragDepth.current <= 0) {
       dragDepth.current = 0;

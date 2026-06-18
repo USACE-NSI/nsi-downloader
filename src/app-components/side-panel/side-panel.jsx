@@ -8,13 +8,16 @@ export function SidePanel() {
     sidePanelPropertyNames,
     sidePanelSelectedProperty,
     doSidePanelSelectProperty,
+    nsiLoading,
   } = useConnect(
     "selectSidePanelPropertyNames",
     "selectSidePanelSelectedProperty",
-    "doSidePanelSelectProperty"
+    "doSidePanelSelectProperty",
+    "selectNsiLoading"
   );
 
   const hasProperties = sidePanelPropertyNames.length > 0;
+  const placeholder = nsiLoading ? "Loading…" : "Run a query to load properties";
 
   return (
     <div className="h-full overflow-y-auto p-3 bg-[#1A1A1A] text-white">
@@ -32,7 +35,7 @@ export function SidePanel() {
             disabled={!hasProperties}
             className="p-2 rounded-md bg-gray-700 text-white text-sm disabled:opacity-50"
           >
-            {!hasProperties && <option value="">Loading…</option>}
+            {!hasProperties && <option value="">{placeholder}</option>}
             {sidePanelPropertyNames.map((name) => (
               <option key={name} value={name}>
                 {name}
