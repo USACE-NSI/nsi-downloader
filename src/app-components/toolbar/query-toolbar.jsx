@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import { useConnect } from "redux-bundler-hook";
 import { ShapezipUpload } from "./shapezip-upload";
 
@@ -31,24 +30,26 @@ export function ToolbarButton({
 
 export function QueryToolbar() {
   const {
-    drawBbox,
+    nsiBbox,
     drawDrawing,
     nsiLoading,
     nsiLoadError,
     sidePanelComputing,
     doDrawStart,
     doDrawClear,
+    doNsiRefresh,
   } = useConnect(
-    "selectDrawBbox",
+    "selectNsiBbox",
     "selectDrawDrawing",
     "selectNsiLoading",
     "selectNsiLoadError",
     "selectSidePanelComputing",
     "doDrawStart",
     "doDrawClear",
+    "doNsiRefresh",
   );
 
-  const hasQuery = drawBbox.length > 0;
+  const hasQuery = nsiBbox.length > 0;
   const status = nsiLoading
     ? "Fetching features…"
     : sidePanelComputing
@@ -81,9 +82,17 @@ export function QueryToolbar() {
       )}
       {!status && !nsiLoadError && hasQuery && (
         <span className="text-xs text-gray-500 font-mono truncate max-w-[24ch]">
-          {drawBbox[0]}
+          {nsiBbox[0]}
         </span>
       )}
+      <ToolbarButton
+        onClick={() => doNsiRefresh()}
+        disabled={!hasQuery || nsiLoading}
+        variant="primary"
+        title="Run the NSI query for the current polygon(s)"
+      >
+        Query
+      </ToolbarButton>
       <ToolbarButton
         onClick={() => doDrawClear()}
         disabled={!hasQuery && !drawDrawing}

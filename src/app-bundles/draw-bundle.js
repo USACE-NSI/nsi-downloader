@@ -3,15 +3,18 @@ import VectorSource from "ol/source/Vector.js";
 import Draw from "ol/interaction/Draw";
 import Modify from "ol/interaction/Modify";
 import Snap from "ol/interaction/Snap";
+import GeoJSON from "ol/format/GeoJSON.js";
 import { Style, Fill, Stroke } from "ol/style";
 import { toLonLat } from "ol/proj";
 import { actions as mapActions } from "./map-bundle.js";
+
+const geojsonFormat = new GeoJSON();
 
 export const actions = {
   INITIALIZED_START: "DRAW_INITIALIZED_START",
   INITIALIZED: "DRAW_INITIALIZED",
   STARTED: "DRAW_STARTED",
-  BBOX_UPDATED: "DRAW_BBOX_UPDATED",
+  FINISHED: "DRAW_FINISHED",
   CLEARED: "DRAW_CLEARED",
 };
 
@@ -22,7 +25,6 @@ export default {
       _shouldInit: false,
       layer: null,
       source: null,
-      bbox: [],
       drawing: false,
     };
     return (state = initialState, { type, payload }) => {
@@ -32,7 +34,7 @@ export default {
         case actions.INITIALIZED_START:
         case actions.INITIALIZED:
         case actions.STARTED:
-        case actions.BBOX_UPDATED:
+        case actions.FINISHED:
         case actions.CLEARED:
           return { ...state, ...payload };
         default:
@@ -42,7 +44,6 @@ export default {
   },
   selectDrawLayer: (state) => state.draw.layer,
   selectDrawSource: (state) => state.draw.source,
-  selectDrawBbox: (state) => state.draw.bbox,
   selectDrawDrawing: (state) => state.draw.drawing,
   doDrawInitialize: () => {
     return ({ store, dispatch }) => {
@@ -87,12 +88,29 @@ export default {
         map.removeInteraction(draw);
         map.removeInteraction(mod);
         map.removeInteraction(snap);
-        dispatch({
-          type: actions.BBOX_UPDATED,
-          payload: { bbox: [bbox], drawing: false },
-        });
+        store.doNsiSetBbox([bbox]);
+        dispatch({ type: actions.FINISHED, payload: { drawing: false } });
       });
       dispatch({ type: actions.STARTED, payload: { drawing: true } });
+    };
+  },
+  doDrawShowPolygons: (geojson) => {
+    return ({ store }) => {
+      const map = store.selectMapMap();
+      const polySource = store.selectDrawSource();
+      if (!map || !polySource) return;
+      const features = geojsonFormat.readFeatures(geojson, {
+        dataProjection: "EPSG:4326",
+        featureProjection: map.getView().getProjection(),
+      });
+      polySource.clear();
+      polySource.addFeatures(features);
+      if (features.length > 0) {
+        map.getView().fit(polySource.getExtent(), {
+          padding: [40, 40, 40, 40],
+          duration: 300,
+        });
+      }
     };
   },
   doDrawClear: () => {
@@ -101,7 +119,7 @@ export default {
       if (polySource) polySource.clear();
       dispatch({
         type: actions.CLEARED,
-        payload: { bbox: [], drawing: false },
+        payload: { drawing: false },
       });
     };
   },

@@ -22,13 +22,15 @@ const defaultStyle = new Style({
   }),
 });
 
+const geojsonFormat = new GeoJSON();
+
 export const actions = {
   INITIALIZED_START: "NSI_INITIALIZED_START",
   INITIALIZED: "NSI_INITIALIZED",
-  REFRESH_REQUESTED: "NSI_REFRESH_REQUESTED",
   LOAD_STARTED: "NSI_LOAD_STARTED",
   LOAD_FINISHED: "NSI_LOAD_FINISHED",
   LOAD_ERRORED: "NSI_LOAD_ERRORED",
+  BBOX_SET: "NSI_BBOX_SET",
   CLEARED: "NSI_CLEARED",
 };
 
@@ -37,7 +39,6 @@ export default {
   getReducer: () => {
     const initialState = {
       _shouldInit: false,
-      _shouldRefresh: false,
       _shouldClear: false,
       layer: null,
       bbox: [],
@@ -48,17 +49,12 @@ export default {
       switch (type) {
         case mapActions.INITIALIZED:
           return { ...state, _shouldInit: true };
-        case drawActions.BBOX_UPDATED:
-          return {
-            ...state,
-            _shouldRefresh: true,
-            bbox: payload?.bbox ?? [],
-          };
+        case actions.BBOX_SET:
+          return { ...state, bbox: payload?.bbox ?? [] };
         case drawActions.CLEARED:
           return { ...state, _shouldClear: true, bbox: [] };
         case actions.INITIALIZED_START:
         case actions.INITIALIZED:
-        case actions.REFRESH_REQUESTED:
         case actions.LOAD_STARTED:
         case actions.LOAD_FINISHED:
         case actions.LOAD_ERRORED:
@@ -73,6 +69,7 @@ export default {
   selectNsiBbox: (state) => state.nsi.bbox,
   selectNsiLoading: (state) => state.nsi.loading,
   selectNsiLoadError: (state) => state.nsi.loadError,
+  doNsiSetBbox: (bbox) => ({ type: actions.BBOX_SET, payload: { bbox } }),
   doNsiInitialize: () => {
     return ({ store, dispatch }) => {
       dispatch({
@@ -92,40 +89,49 @@ export default {
         source,
         style: defaultStyle,
       });
-      source.on("featuresloadstart", () => {
-        dispatch({
-          type: actions.LOAD_STARTED,
-          payload: { loading: true, loadError: null },
-        });
-      });
-      source.on("featuresloadend", () => {
-        dispatch({
-          type: actions.LOAD_FINISHED,
-          payload: { loading: false },
-        });
-      });
-      source.on("featuresloaderror", () => {
-        dispatch({
-          type: actions.LOAD_ERRORED,
-          payload: { loading: false, loadError: "Failed to load features" },
-        });
-      });
       map.addLayer(layer);
       dispatch({ type: actions.INITIALIZED, payload: { layer } });
     };
   },
   doNsiRefresh: () => {
-    return ({ store, dispatch }) => {
-      dispatch({
-        type: actions.REFRESH_REQUESTED,
-        payload: { _shouldRefresh: false },
-      });
+    return async ({ store, dispatch }) => {
       const layer = store.selectNsiLayer();
       const bbox = store.selectNsiBbox();
       if (!layer || !bbox.length) return;
-      const source = layer.getSource();
-      source.setUrl(NSI_URL_BASE + bbox[0]);
-      source.refresh();
+      const projection = store.selectMapMap().getView().getProjection();
+      dispatch({
+        type: actions.LOAD_STARTED,
+        payload: { loading: true, loadError: null },
+      });
+      try {
+        const polygonGeojsons = await Promise.all(
+          bbox.map(async (ring) => {
+            const res = await fetch(NSI_URL_BASE + ring);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.json();
+          }),
+        );
+
+        // dedup if we have overlapping polygons
+        const byId = new Map();
+        for (const json of polygonGeojsons) {
+          const features = geojsonFormat.readFeatures(json, {
+            dataProjection: "EPSG:4326",
+            featureProjection: projection,
+          });
+          for (const f of features) byId.set(f.get("fd_id"), f);
+        }
+
+        const source = layer.getSource();
+        source.clear();
+        source.addFeatures([...byId.values()]);
+        dispatch({ type: actions.LOAD_FINISHED, payload: { loading: false } });
+      } catch {
+        dispatch({
+          type: actions.LOAD_ERRORED,
+          payload: { loading: false, loadError: "Failed to load features" },
+        });
+      }
     };
   },
   doNsiClear: () => {
@@ -140,9 +146,6 @@ export default {
   },
   reactNsiShouldInit: (state) => {
     if (state.nsi._shouldInit) return { actionCreator: "doNsiInitialize" };
-  },
-  reactNsiShouldRefresh: (state) => {
-    if (state.nsi._shouldRefresh) return { actionCreator: "doNsiRefresh" };
   },
   reactNsiShouldClear: (state) => {
     if (state.nsi._shouldClear) return { actionCreator: "doNsiClear" };

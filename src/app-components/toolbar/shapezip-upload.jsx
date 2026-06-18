@@ -1,8 +1,13 @@
 import { ToolbarButton } from "./query-toolbar";
 import { useRef } from "react";
+import { useConnect } from "redux-bundler-hook";
 import shp from "shpjs";
 
 export function ShapezipUpload() {
+  const { doNsiSetBbox, doDrawShowPolygons } = useConnect(
+    "doNsiSetBbox",
+    "doDrawShowPolygons",
+  );
   const fileInputRef = useRef(null);
 
   const handleShapefileSelected = async (e) => {
@@ -12,13 +17,15 @@ export function ShapezipUpload() {
     try {
       const geojson = await shp(await file.arrayBuffer());
 
-      // coordinates[0] represents coords for the first polygon in this feature
-      // array of [x,y] arrays
-      const coords = geojson.features[0].geometry.coordinates[0];
-
+      const rings = geojson.features.map((feature) => {
+        // coordinates[0] represents coordinates for the first polygon in this feature
+        // array of [lon, lat] arrays
+        const coords = feature.geometry.coordinates[0];
+        return coords.map(([lon, lat]) => `${lon},${lat}`).join(",");
+      });
       // TODO: validate polygons (turf) -> one NSI request per polygon -> merge by fd_id
-      console.log("Parsed shapefile:", geojson);
-      console.log("Coordinates", coords);
+      doNsiSetBbox(rings);
+      doDrawShowPolygons(geojson);
     } catch (err) {
       console.error("Failed to read shapefile:", err);
     }
@@ -29,6 +36,7 @@ export function ShapezipUpload() {
       <ToolbarButton
         onClick={() => fileInputRef.current?.click()}
         title="Upload a zipped polygon shapefile (.zip)"
+        variant="primary"
       >
         Upload Shapezip
       </ToolbarButton>
