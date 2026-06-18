@@ -22,7 +22,7 @@ export default {
       _shouldInit: false,
       layer: null,
       source: null,
-      bbox: null,
+      bbox: [],
       drawing: false,
     };
     return (state = initialState, { type, payload }) => {
@@ -89,7 +89,7 @@ export default {
         map.removeInteraction(snap);
         dispatch({
           type: actions.BBOX_UPDATED,
-          payload: { bbox, drawing: false },
+          payload: { bbox: [bbox], drawing: false },
         });
       });
       dispatch({ type: actions.STARTED, payload: { drawing: true } });
@@ -101,7 +101,7 @@ export default {
       if (polySource) polySource.clear();
       dispatch({
         type: actions.CLEARED,
-        payload: { bbox: null, drawing: false },
+        payload: { bbox: [], drawing: false },
       });
     };
   },

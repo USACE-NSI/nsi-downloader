@@ -1,6 +1,8 @@
+import { useRef } from "react";
 import { useConnect } from "redux-bundler-hook";
+import { ShapezipUpload } from "./shapezip-upload";
 
-function ToolbarButton({
+export function ToolbarButton({
   onClick,
   disabled,
   title,
@@ -13,8 +15,7 @@ function ToolbarButton({
     default: "bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50",
     primary: "bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50",
     danger: "bg-red-600 text-white hover:bg-red-500 disabled:opacity-40",
-    mock:
-      "bg-gray-700 text-gray-400 border border-dashed border-gray-500 opacity-70",
+    mock: "bg-gray-700 text-gray-400 border border-dashed border-gray-500 opacity-70",
   };
   return (
     <button
@@ -47,7 +48,7 @@ export function QueryToolbar() {
     "doDrawClear",
   );
 
-  const hasQuery = drawBbox != null;
+  const hasQuery = drawBbox.length > 0;
   const status = nsiLoading
     ? "Fetching features…"
     : sidePanelComputing
@@ -67,20 +68,7 @@ export function QueryToolbar() {
       >
         {drawDrawing ? "Drawing…" : "Draw Polygon"}
       </ToolbarButton>
-      <ToolbarButton
-        disabled
-        variant="mock"
-        title="Coming soon — upload one or more polygons from a shapefile"
-      >
-        Upload Shapefile
-      </ToolbarButton>
-      <ToolbarButton
-        disabled
-        variant="mock"
-        title="Coming soon — enter bounding box coordinates manually"
-      >
-        Enter BBOX
-      </ToolbarButton>
+      <ShapezipUpload />
       <div className="flex-1" />
       {status && (
         <span className="flex items-center gap-2 text-xs text-blue-300">
@@ -93,7 +81,7 @@ export function QueryToolbar() {
       )}
       {!status && !nsiLoadError && hasQuery && (
         <span className="text-xs text-gray-500 font-mono truncate max-w-[24ch]">
-          {drawBbox}
+          {drawBbox[0]}
         </span>
       )}
       <ToolbarButton

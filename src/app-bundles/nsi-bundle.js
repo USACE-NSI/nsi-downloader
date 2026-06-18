@@ -40,7 +40,7 @@ export default {
       _shouldRefresh: false,
       _shouldClear: false,
       layer: null,
-      bbox: null,
+      bbox: [],
       loading: false,
       loadError: null,
     };
@@ -52,10 +52,10 @@ export default {
           return {
             ...state,
             _shouldRefresh: true,
-            bbox: payload?.bbox ?? null,
+            bbox: payload?.bbox ?? [],
           };
         case drawActions.CLEARED:
-          return { ...state, _shouldClear: true, bbox: null };
+          return { ...state, _shouldClear: true, bbox: [] };
         case actions.INITIALIZED_START:
         case actions.INITIALIZED:
         case actions.REFRESH_REQUESTED:
@@ -122,9 +122,9 @@ export default {
       });
       const layer = store.selectNsiLayer();
       const bbox = store.selectNsiBbox();
-      if (!layer || !bbox) return;
+      if (!layer || !bbox.length) return;
       const source = layer.getSource();
-      source.setUrl(NSI_URL_BASE + bbox);
+      source.setUrl(NSI_URL_BASE + bbox[0]);
       source.refresh();
     };
   },
@@ -142,8 +142,7 @@ export default {
     if (state.nsi._shouldInit) return { actionCreator: "doNsiInitialize" };
   },
   reactNsiShouldRefresh: (state) => {
-    if (state.nsi._shouldRefresh)
-      return { actionCreator: "doNsiRefresh" };
+    if (state.nsi._shouldRefresh) return { actionCreator: "doNsiRefresh" };
   },
   reactNsiShouldClear: (state) => {
     if (state.nsi._shouldClear) return { actionCreator: "doNsiClear" };
