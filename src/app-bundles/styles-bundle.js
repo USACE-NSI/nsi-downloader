@@ -63,6 +63,11 @@ function symlogInverse(y) {
   return Math.sign(y) * (Math.pow(10, Math.abs(y)) - 1);
 }
 
+// Quantize the gradient into a fixed number of color buckets so the style
+// cache in makeStyleFn stays small. Without this, every distinct numeric value
+// yields a near-unique hex, defeating the cache (one Style per feature).
+const GRADIENT_BUCKETS = 64;
+
 const GRADIENT_STOP_FRACTIONS = [
   { label: "Min", t: 0 },
   { label: "25%", t: 0.25 },
@@ -85,7 +90,10 @@ function buildNumericScheme(property, values) {
   const colorFor = (val) => {
     const v = Number(val);
     if (!Number.isFinite(v)) return FALLBACK_COLOR;
-    return gradientColor((symlog(v) - lMin) / lRange);
+    const t = (symlog(v) - lMin) / lRange;
+    const clamped = Math.min(1, Math.max(0, t));
+    const bucketed = Math.round(clamped * GRADIENT_BUCKETS) / GRADIENT_BUCKETS;
+    return gradientColor(bucketed);
   };
   const gradientStops = GRADIENT_STOP_FRACTIONS.map(({ label, t }) => {
     const value = symlogInverse(lMin + t * lRange);
