@@ -9,7 +9,7 @@ export function ToolbarButton({
   children,
 }) {
   const base =
-    "px-3 py-1.5 rounded text-sm font-medium transition disabled:cursor-not-allowed";
+    "px-3 py-1.5 rounded text-sm font-medium transition border border-transparent disabled:cursor-not-allowed";
   const variants = {
     default: "bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50",
     primary: "bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50",
@@ -28,9 +28,26 @@ export function ToolbarButton({
   );
 }
 
+function ModeTab({ active, onClick, children }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-2.5 py-1 text-xs font-medium transition ${
+        active
+          ? "bg-blue-600 text-white"
+          : "bg-transparent text-gray-400 hover:text-gray-200"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
 export function QueryToolbar() {
   const {
     nsiBbox,
+    nsiQueryType,
+    nsiFips,
     drawDrawing,
     drawVisible,
     nsiLoading,
@@ -39,9 +56,14 @@ export function QueryToolbar() {
     doDrawStart,
     doDrawClear,
     doDrawSetVisible,
+    doNsiSetQueryType,
+    doNsiSetFips,
+    doNsiClear,
     doNsiRefresh,
   } = useConnect(
     "selectNsiBbox",
+    "selectNsiQueryType",
+    "selectNsiFips",
     "selectDrawDrawing",
     "selectDrawVisible",
     "selectNsiLoading",
@@ -50,42 +72,81 @@ export function QueryToolbar() {
     "doDrawStart",
     "doDrawClear",
     "doDrawSetVisible",
+    "doNsiSetQueryType",
+    "doNsiSetFips",
+    "doNsiClear",
     "doNsiRefresh",
   );
 
-  const hasQuery = nsiBbox.length > 0;
+  const isFips = nsiQueryType === "fips";
+  const hasQuery = isFips ? nsiFips.trim().length > 0 : nsiBbox.length > 0;
   const status = nsiLoading
     ? "Fetching features…"
     : sidePanelComputing
       ? "Computing stats…"
       : null;
 
+  const runQuery = () => {
+    if (hasQuery && !nsiLoading) doNsiRefresh();
+  };
+
+  const clearQuery = () => {
+    if (isFips) {
+      doNsiSetFips("");
+      doNsiClear();
+    } else {
+      doDrawClear();
+    }
+  };
+
   return (
     <div className="flex items-center gap-2 px-3 py-2 bg-[#222] border-b border-gray-700">
-      <span className="text-xs uppercase tracking-wider text-gray-400 mr-1">
-        Query
-      </span>
-      <ToolbarButton
-        onClick={() => doDrawStart()}
-        disabled={drawDrawing}
-        variant="primary"
-        title="Draw a polygon on the map to define the query area"
-      >
-        {drawDrawing ? "Drawing…" : "Draw Polygon"}
-      </ToolbarButton>
-      <ShapezipUpload />
-      <label
-        className="flex items-center gap-1.5 text-xs text-gray-300 cursor-pointer select-none"
-        title="Show or hide the drawn query polygons on the map"
-      >
+      <div className="flex rounded overflow-hidden border border-gray-600 mr-1">
+        <ModeTab
+          active={!isFips}
+          onClick={() => doNsiSetQueryType("polygon")}
+        >
+          Polygon
+        </ModeTab>
+        <ModeTab active={isFips} onClick={() => doNsiSetQueryType("fips")}>
+          State / County
+        </ModeTab>
+      </div>
+      {isFips ? (
         <input
-          type="checkbox"
-          checked={drawVisible}
-          onChange={(e) => doDrawSetVisible(e.target.checked)}
-          className="accent-blue-500"
+          type="text"
+          value={nsiFips}
+          onChange={(e) => doNsiSetFips(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && runQuery()}
+          placeholder="FIPS code (e.g. 06 or 06075)"
+          title="State FIPS (2 digits) or county FIPS (5 digits)"
+          className="px-2 py-1.5 rounded text-sm bg-gray-800 text-white border border-gray-600 focus:border-blue-500 focus:outline-none w-56"
         />
-        Show query area
-      </label>
+      ) : (
+        <>
+          <ToolbarButton
+            onClick={() => doDrawStart()}
+            disabled={drawDrawing}
+            variant="primary"
+            title="Draw a polygon on the map to define the query area"
+          >
+            {drawDrawing ? "Drawing…" : "Draw Polygon"}
+          </ToolbarButton>
+          <ShapezipUpload />
+          <label
+            className="flex items-center gap-1.5 text-xs text-gray-300 cursor-pointer select-none"
+            title="Show or hide the drawn query polygons on the map"
+          >
+            <input
+              type="checkbox"
+              checked={drawVisible}
+              onChange={(e) => doDrawSetVisible(e.target.checked)}
+              className="accent-blue-500"
+            />
+            Show query area
+          </label>
+        </>
+      )}
       <div className="flex-1" />
       {status && (
         <span className="flex items-center gap-2 text-xs text-blue-300">
@@ -96,24 +157,32 @@ export function QueryToolbar() {
       {!status && nsiLoadError && (
         <span className="text-xs text-red-400">{nsiLoadError}</span>
       )}
-      {!status && !nsiLoadError && hasQuery && (
+      {!status && !nsiLoadError && !isFips && hasQuery && (
         <span className="text-xs text-gray-500 font-mono truncate max-w-[24ch]">
           {nsiBbox[0]}
         </span>
       )}
       <ToolbarButton
-        onClick={() => doNsiRefresh()}
+        onClick={runQuery}
         disabled={!hasQuery || nsiLoading}
         variant="primary"
-        title="Run the NSI query for the current polygon(s)"
+        title={
+          isFips
+            ? "Run the NSI query for the entered FIPS code"
+            : "Run the NSI query for the current polygon(s)"
+        }
       >
         Query
       </ToolbarButton>
       <ToolbarButton
-        onClick={() => doDrawClear()}
+        onClick={clearQuery}
         disabled={!hasQuery && !drawDrawing}
         variant="danger"
-        title="Clear the current query and drawn polygon"
+        title={
+          isFips
+            ? "Clear the FIPS code and loaded features"
+            : "Clear the current query and drawn polygon"
+        }
       >
         Clear
       </ToolbarButton>

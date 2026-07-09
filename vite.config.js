@@ -12,6 +12,11 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, ""),
         changeOrigin: true,
       },
+      "/fcc": {
+        target: "https://geo.fcc.gov",
+        rewrite: (path) => path.replace(/^\/fcc/, ""),
+        changeOrigin: true,
+      },
       "/tiles": {
         target:
           "https://ml-dev.sec.usace.army.mil/nsi-ml/tileservice/services/nsi-all-pub/tiles",

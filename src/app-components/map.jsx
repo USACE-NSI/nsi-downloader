@@ -1,13 +1,29 @@
 import { useConnect } from "redux-bundler-hook";
 import { useEffect, useRef, useState } from "react";
+import Overlay from "ol/Overlay";
 import "ol/ol.css";
 
 export function Map() {
-  const { doMapInitialize, doNsiLoadShapezip } = useConnect(
+  const {
+    mapMap,
+    doMapInitialize,
+    doNsiLoadShapezip,
+    nsiClickInfo,
+    nsiClickLoading,
+    doNsiSetFips,
+    doNsiClearClick,
+  } = useConnect(
+    "selectMapMap",
     "doMapInitialize",
     "doNsiLoadShapezip",
+    "selectNsiClickInfo",
+    "selectNsiClickLoading",
+    "doNsiSetFips",
+    "doNsiClearClick",
   );
   const el = useRef();
+  const popupRef = useRef();
+  const overlayRef = useRef();
   // Drag events fire per child element, so count enters/leaves to avoid flicker
   // useRef instead of useState because we do not want to cause rerenders when this changes
   const dragDepth = useRef(0);
@@ -17,6 +33,32 @@ export function Map() {
     if (!el.current) return undefined;
     doMapInitialize(el.current);
   }, [el.current]);
+
+  // Anchor the click popup to the map once both exist. stopEvent keeps clicks
+  // inside the popup from re-triggering the map's singleclick handler.
+  useEffect(() => {
+    if (!mapMap || !popupRef.current || overlayRef.current) return;
+    const overlay = new Overlay({
+      element: popupRef.current,
+      positioning: "bottom-center",
+      offset: [0, -12],
+      stopEvent: true,
+    });
+    mapMap.addOverlay(overlay);
+    overlayRef.current = overlay;
+  }, [mapMap]);
+
+  // Move the popup to the clicked coordinate, or hide it when there is none.
+  useEffect(() => {
+    if (overlayRef.current) {
+      overlayRef.current.setPosition(nsiClickInfo?.coordinate);
+    }
+  }, [nsiClickInfo]);
+
+  const pickFips = (code) => {
+    doNsiSetFips(code);
+    doNsiClearClick();
+  };
 
   const handleDragEnter = (e) => {
     e.preventDefault();
@@ -56,6 +98,54 @@ export function Map() {
           </span>
         </div>
       )}
+      <div ref={popupRef}>
+        {nsiClickInfo && (
+          <div className="min-w-[190px] overflow-hidden rounded-md border border-gray-600 bg-[#222] text-xs text-white shadow-lg">
+            <div className="flex items-center justify-between border-b border-gray-700 bg-[#2a2a2a] px-2 py-1.5">
+              <span className="text-[10px] uppercase tracking-wider text-gray-400">
+                Select area
+              </span>
+              <button
+                onClick={() => doNsiClearClick()}
+                className="text-gray-400 hover:text-white"
+                title="Dismiss"
+              >
+                ✕
+              </button>
+            </div>
+            {nsiClickLoading ? (
+              <div className="px-3 py-2 text-gray-400">Looking up…</div>
+            ) : (
+              <div className="py-1">
+                <button
+                  onClick={() => pickFips(nsiClickInfo.stateFips)}
+                  className="flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left hover:bg-gray-700"
+                >
+                  <span>
+                    <span className="text-gray-400">State: </span>
+                    {nsiClickInfo.stateName}
+                  </span>
+                  <span className="font-mono text-gray-400">
+                    {nsiClickInfo.stateFips}
+                  </span>
+                </button>
+                <button
+                  onClick={() => pickFips(nsiClickInfo.countyFips)}
+                  className="flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left hover:bg-gray-700"
+                >
+                  <span>
+                    <span className="text-gray-400">County: </span>
+                    {nsiClickInfo.countyName}
+                  </span>
+                  <span className="font-mono text-gray-400">
+                    {nsiClickInfo.countyFips}
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

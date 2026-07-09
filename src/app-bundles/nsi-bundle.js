@@ -6,6 +6,7 @@ import Circle from "ol/style/Circle.js";
 import Fill from "ol/style/Fill.js";
 import Stroke from "ol/style/Stroke.js";
 import shp from "shpjs";
+import { toLonLat } from "ol/proj";
 import { actions as mapActions } from "./map-bundle.js";
 import { actions as drawActions } from "./draw-bundle.js";
 
@@ -50,8 +51,14 @@ export const actions = {
   LOAD_FINISHED: "NSI_LOAD_FINISHED",
   LOAD_ERRORED: "NSI_LOAD_ERRORED",
   BBOX_ADD: "NSI_BBOX_ADD",
+  QUERY_TYPE_SET: "NSI_QUERY_TYPE_SET",
+  FIPS_SET: "NSI_FIPS_SET",
+  CLICK_SET: "NSI_CLICK_SET",
   CLEARED: "NSI_CLEARED",
 };
+
+// FCC block/find reverse-geocodes a lon/lat into State + County FIPS codes.
+const FCC_URL = "/fcc/api/census/block/find?format=json";
 
 export default {
   name: "nsi",
@@ -60,7 +67,15 @@ export default {
       _shouldInit: false,
       _shouldClear: false,
       layer: null,
+      // "polygon" queries POST drawn/uploaded rings; "fips" GETs by state or
+      // county FIPS code (2-digit = state, 5-digit = county).
+      queryType: "polygon",
       bbox: [],
+      fips: "",
+      // Popup shown after a map click in FIPS mode: the clicked coordinate plus
+      // the state/county the FCC lookup resolved it to (null when hidden).
+      clickInfo: null,
+      clickLoading: false,
       featureCount: 0,
       loading: false,
       loadError: null,
@@ -71,6 +86,18 @@ export default {
           return { ...state, _shouldInit: true };
         case actions.BBOX_ADD:
           return { ...state, bbox: [...state.bbox, ...payload.rings] };
+        case actions.QUERY_TYPE_SET:
+          // Switching modes dismisses any open click popup.
+          return {
+            ...state,
+            queryType: payload.queryType,
+            clickInfo: null,
+            clickLoading: false,
+          };
+        case actions.FIPS_SET:
+          return { ...state, fips: payload.fips };
+        case actions.CLICK_SET:
+          return { ...state, ...payload };
         case drawActions.CLEARED:
           return { ...state, _shouldClear: true, bbox: [] };
         case actions.INITIALIZED_START:
@@ -87,10 +114,68 @@ export default {
   },
   selectNsiLayer: (state) => state.nsi.layer,
   selectNsiBbox: (state) => state.nsi.bbox,
+  selectNsiQueryType: (state) => state.nsi.queryType,
+  selectNsiFips: (state) => state.nsi.fips,
+  selectNsiClickInfo: (state) => state.nsi.clickInfo,
+  selectNsiClickLoading: (state) => state.nsi.clickLoading,
   selectNsiFeatureCount: (state) => state.nsi.featureCount,
   selectNsiLoading: (state) => state.nsi.loading,
   selectNsiLoadError: (state) => state.nsi.loadError,
   doNsiAddBbox: (rings) => ({ type: actions.BBOX_ADD, payload: { rings } }),
+  doNsiSetQueryType: (queryType) => ({
+    type: actions.QUERY_TYPE_SET,
+    payload: { queryType },
+  }),
+  doNsiSetFips: (fips) => ({ type: actions.FIPS_SET, payload: { fips } }),
+  doNsiClearClick: () => ({
+    type: actions.CLICK_SET,
+    payload: { clickInfo: null, clickLoading: false },
+  }),
+  // Reverse-geocode a clicked map coordinate (map projection) into state/county
+  // FIPS codes and open the selection popup at that spot.
+  doNsiLookupFips: (coordinate) => {
+    return async ({ dispatch }) => {
+      const [lon, lat] = toLonLat(coordinate);
+      const url = `${FCC_URL}&latitude=${lat}&longitude=${lon}`;
+      // Show the popup at the click immediately with a loading state.
+      dispatch({
+        type: actions.CLICK_SET,
+        payload: { clickInfo: { coordinate }, clickLoading: true },
+      });
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        // No county => click was outside the US (e.g. ocean); dismiss.
+        if (data.status !== "OK" || !data.County?.FIPS) {
+          dispatch({
+            type: actions.CLICK_SET,
+            payload: { clickInfo: null, clickLoading: false },
+          });
+          return;
+        }
+        dispatch({
+          type: actions.CLICK_SET,
+          payload: {
+            clickLoading: false,
+            clickInfo: {
+              coordinate,
+              stateFips: data.State.FIPS,
+              stateName: data.State.name,
+              countyFips: data.County.FIPS,
+              countyName: data.County.name,
+            },
+          },
+        });
+      } catch (err) {
+        console.error("FCC lookup failed:", err);
+        dispatch({
+          type: actions.CLICK_SET,
+          payload: { clickInfo: null, clickLoading: false },
+        });
+      }
+    };
+  },
   // Parse a zipped shapefile into query polygons. Shared by the toolbar upload
   // button and drag-and-drop onto the map.
   doNsiLoadShapezip: (file) => {
@@ -144,35 +229,55 @@ export default {
         style: defaultStyle,
       });
       map.addLayer(layer);
+      // In FIPS mode a map click reverse-geocodes to a state/county picker.
+      // In polygon mode the draw interactions own clicks, so we no-op.
+      map.on("singleclick", (e) => {
+        if (store.selectNsiQueryType() !== "fips") return;
+        store.doNsiLookupFips(e.coordinate);
+      });
       dispatch({ type: actions.INITIALIZED, payload: { layer } });
     };
   },
   doNsiRefresh: () => {
     return async ({ store, dispatch }) => {
       const layer = store.selectNsiLayer();
+      if (!layer) return;
+      const queryType = store.selectNsiQueryType();
       const bbox = store.selectNsiBbox();
-      if (!layer || !bbox.length) return;
+      const fips = store.selectNsiFips().trim();
+      // Nothing to query yet for the active mode.
+      if (queryType === "fips" ? !fips : !bbox.length) return;
       const projection = store.selectMapMap().getView().getProjection();
       dispatch({
         type: actions.LOAD_STARTED,
         payload: { loading: true, loadError: null },
       });
       try {
-        const polygonGeojsons = await Promise.all(
-          bbox.map(async (ring) => {
-            const res = await fetch(NSI_URL, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(ringToFeatureCollection(ring)),
-            });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            return res.json();
-          }),
-        );
+        let responseGeojsons;
+        if (queryType === "fips") {
+          // FIPS is short enough to pass in the URL, so a plain GET is fine.
+          const res = await fetch(
+            `${NSI_URL}&fips=${encodeURIComponent(fips)}`,
+          );
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          responseGeojsons = [await res.json()];
+        } else {
+          responseGeojsons = await Promise.all(
+            bbox.map(async (ring) => {
+              const res = await fetch(NSI_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(ringToFeatureCollection(ring)),
+              });
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              return res.json();
+            }),
+          );
+        }
 
         // dedup if we have overlapping polygons
         const byId = new Map();
-        for (const json of polygonGeojsons) {
+        for (const json of responseGeojsons) {
           const features = geojsonFormat.readFeatures(json, {
             dataProjection: "EPSG:4326",
             featureProjection: projection,
@@ -201,7 +306,12 @@ export default {
       if (layer) layer.getSource().clear();
       dispatch({
         type: actions.CLEARED,
-        payload: { _shouldClear: false, featureCount: 0 },
+        payload: {
+          _shouldClear: false,
+          featureCount: 0,
+          clickInfo: null,
+          clickLoading: false,
+        },
       });
     };
   },
