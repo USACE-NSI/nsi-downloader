@@ -122,10 +122,17 @@ export default {
   selectNsiLoading: (state) => state.nsi.loading,
   selectNsiLoadError: (state) => state.nsi.loadError,
   doNsiAddBbox: (rings) => ({ type: actions.BBOX_ADD, payload: { rings } }),
-  doNsiSetQueryType: (queryType) => ({
-    type: actions.QUERY_TYPE_SET,
-    payload: { queryType },
-  }),
+  doNsiSetQueryType: (queryType) => {
+    return ({ store, dispatch }) => {
+      dispatch({ type: actions.QUERY_TYPE_SET, payload: { queryType } });
+      // Hide the drawn polygons outside polygon mode without destroying them;
+      // restore the user's show/hide preference when back in polygon mode.
+      const layer = store.selectDrawLayer();
+      if (layer) {
+        layer.setVisible(queryType === "polygon" && store.selectDrawVisible());
+      }
+    };
+  },
   doNsiSetFips: (fips) => ({ type: actions.FIPS_SET, payload: { fips } }),
   doNsiClearClick: () => ({
     type: actions.CLICK_SET,
@@ -154,6 +161,9 @@ export default {
           });
           return;
         }
+        // Block.FIPS is the 15-digit code; the finer levels are prefixes of it.
+        // (state=2, county=5, tract=11, block group=12, block=15)
+        const block = data.Block?.FIPS;
         dispatch({
           type: actions.CLICK_SET,
           payload: {
@@ -164,6 +174,9 @@ export default {
               stateName: data.State.name,
               countyFips: data.County.FIPS,
               countyName: data.County.name,
+              tractFips: block ? block.slice(0, 11) : null,
+              blockGroupFips: block ? block.slice(0, 12) : null,
+              blockFips: block || null,
             },
           },
         });
@@ -233,6 +246,13 @@ export default {
       // In polygon mode the draw interactions own clicks, so we no-op.
       map.on("singleclick", (e) => {
         if (store.selectNsiQueryType() !== "fips") return;
+        // Clicking a structure selects it (see selection-bundle); only run the
+        // FIPS lookup when the click lands on empty map, not on a feature.
+        const onFeature = map.hasFeatureAtPixel(e.pixel, {
+          layerFilter: (lyr) => lyr === layer,
+          hitTolerance: 5,
+        });
+        if (onFeature) return;
         store.doNsiLookupFips(e.coordinate);
       });
       dispatch({ type: actions.INITIALIZED, payload: { layer } });

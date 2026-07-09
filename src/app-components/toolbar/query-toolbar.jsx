@@ -109,7 +109,7 @@ export function QueryToolbar() {
           Polygon
         </ModeTab>
         <ModeTab active={isFips} onClick={() => doNsiSetQueryType("fips")}>
-          State / County
+          FIPS
         </ModeTab>
       </div>
       {isFips ? (
@@ -118,9 +118,9 @@ export function QueryToolbar() {
           value={nsiFips}
           onChange={(e) => doNsiSetFips(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && runQuery()}
-          placeholder="FIPS code (e.g. 06 or 06075)"
-          title="State FIPS (2 digits) or county FIPS (5 digits)"
-          className="px-2 py-1.5 rounded text-sm bg-gray-800 text-white border border-gray-600 focus:border-blue-500 focus:outline-none w-56"
+          placeholder="FIPS code (e.g. 06, 06075, 06075012405)"
+          title="FIPS code: state (2), county (5), tract (11), block group (12), or block (15) digits"
+          className="px-2 py-1.5 rounded text-sm bg-gray-800 text-white border border-gray-600 focus:border-blue-500 focus:outline-none w-72"
         />
       ) : (
         <>

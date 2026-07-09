@@ -117,30 +117,35 @@ export function Map() {
               <div className="px-3 py-2 text-gray-400">Looking up…</div>
             ) : (
               <div className="py-1">
-                <button
-                  onClick={() => pickFips(nsiClickInfo.stateFips)}
-                  className="flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left hover:bg-gray-700"
-                >
-                  <span>
-                    <span className="text-gray-400">State: </span>
-                    {nsiClickInfo.stateName}
-                  </span>
-                  <span className="font-mono text-gray-400">
-                    {nsiClickInfo.stateFips}
-                  </span>
-                </button>
-                <button
-                  onClick={() => pickFips(nsiClickInfo.countyFips)}
-                  className="flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left hover:bg-gray-700"
-                >
-                  <span>
-                    <span className="text-gray-400">County: </span>
-                    {nsiClickInfo.countyName}
-                  </span>
-                  <span className="font-mono text-gray-400">
-                    {nsiClickInfo.countyFips}
-                  </span>
-                </button>
+                {[
+                  {
+                    label: "State",
+                    name: nsiClickInfo.stateName,
+                    code: nsiClickInfo.stateFips,
+                  },
+                  {
+                    label: "County",
+                    name: nsiClickInfo.countyName,
+                    code: nsiClickInfo.countyFips,
+                  },
+                  { label: "Tract", code: nsiClickInfo.tractFips },
+                  { label: "Block group", code: nsiClickInfo.blockGroupFips },
+                  { label: "Block", code: nsiClickInfo.blockFips },
+                ]
+                  .filter((o) => o.code)
+                  .map((o) => (
+                    <button
+                      key={o.label}
+                      onClick={() => pickFips(o.code)}
+                      className="flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left hover:bg-gray-700"
+                    >
+                      <span>
+                        <span className="text-gray-400">{o.label}: </span>
+                        {o.name ?? ""}
+                      </span>
+                      <span className="font-mono text-gray-400">{o.code}</span>
+                    </button>
+                  ))}
               </div>
             )}
           </div>
