@@ -12,6 +12,7 @@ export function Map() {
     nsiClickLoading,
     doNsiSetFips,
     doNsiClearClick,
+    doNsiRefresh,
   } = useConnect(
     "selectMapMap",
     "doMapInitialize",
@@ -20,6 +21,7 @@ export function Map() {
     "selectNsiClickLoading",
     "doNsiSetFips",
     "doNsiClearClick",
+    "doNsiRefresh",
   );
   const el = useRef();
   const popupRef = useRef();
@@ -56,8 +58,11 @@ export function Map() {
   }, [nsiClickInfo]);
 
   const pickFips = (code) => {
+    // Fill the FIPS box, dismiss the popup, and run the query in one click.
+    // doNsiSetFips dispatches synchronously, so doNsiRefresh reads the new code.
     doNsiSetFips(code);
     doNsiClearClick();
+    doNsiRefresh();
   };
 
   const handleDragEnter = (e) => {

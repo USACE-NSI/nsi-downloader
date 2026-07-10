@@ -60,6 +60,10 @@ export const actions = {
 // FCC block/find reverse-geocodes a lon/lat into State + County FIPS codes.
 const FCC_URL = "/fcc/api/census/block/find?format=json";
 
+// The single in-flight structures request, so Clear (or a newer query) can
+// abort it and a stale response can never repopulate the layer after the fact.
+let inflightController = null;
+
 export default {
   name: "nsi",
   getReducer: () => {
@@ -268,6 +272,14 @@ export default {
       // Nothing to query yet for the active mode.
       if (queryType === "fips" ? !fips : !bbox.length) return;
       const projection = store.selectMapMap().getView().getProjection();
+
+      // Cancel any query already in flight so its response can't land after a
+      // newer query or a Clear supersedes it.
+      if (inflightController) inflightController.abort();
+      const controller = new AbortController();
+      inflightController = controller;
+      const { signal } = controller;
+
       dispatch({
         type: actions.LOAD_STARTED,
         payload: { loading: true, loadError: null },
@@ -278,6 +290,7 @@ export default {
           // FIPS is short enough to pass in the URL, so a plain GET is fine.
           const res = await fetch(
             `${NSI_URL}&fips=${encodeURIComponent(fips)}`,
+            { signal },
           );
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           responseGeojsons = [await res.json()];
@@ -288,6 +301,7 @@ export default {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(ringToFeatureCollection(ring)),
+                signal,
               });
               if (!res.ok) throw new Error(`HTTP ${res.status}`);
               return res.json();
@@ -312,16 +326,26 @@ export default {
           type: actions.LOAD_FINISHED,
           payload: { loading: false, featureCount: byId.size },
         });
-      } catch {
+      } catch (err) {
+        // Aborted by Clear or a newer query: that caller owns the UI state, so
+        // don't clobber it with a spurious error.
+        if (signal.aborted || err.name === "AbortError") return;
         dispatch({
           type: actions.LOAD_ERRORED,
           payload: { loading: false, loadError: "Failed to load features" },
         });
+      } finally {
+        if (inflightController === controller) inflightController = null;
       }
     };
   },
   doNsiClear: () => {
     return ({ store, dispatch }) => {
+      // Stop any in-flight query so its response can't repopulate the layer.
+      if (inflightController) {
+        inflightController.abort();
+        inflightController = null;
+      }
       const layer = store.selectNsiLayer();
       if (layer) layer.getSource().clear();
       dispatch({
@@ -329,6 +353,8 @@ export default {
         payload: {
           _shouldClear: false,
           featureCount: 0,
+          loading: false,
+          loadError: null,
           clickInfo: null,
           clickLoading: false,
         },
