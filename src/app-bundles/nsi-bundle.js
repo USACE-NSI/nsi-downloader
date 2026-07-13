@@ -7,6 +7,7 @@ import Fill from "ol/style/Fill.js";
 import Stroke from "ol/style/Stroke.js";
 import shp from "shpjs";
 import { toLonLat } from "ol/proj";
+import { buffer, getWidth, getHeight } from "ol/extent";
 import { actions as mapActions } from "./map-bundle.js";
 import { actions as drawActions } from "./draw-bundle.js";
 
@@ -271,6 +272,19 @@ export default {
       const fips = store.selectNsiFips().trim();
       // Nothing to query yet for the active mode.
       if (queryType === "fips" ? !fips : !bbox.length) return;
+
+      // A 2-digit FIPS is a state. State-level queries aren't scalable yet, so
+      // reject them and surface the reason where other load errors show.
+      if (queryType === "fips" && /^\d{2}$/.test(fips)) {
+        dispatch({
+          type: actions.LOAD_ERRORED,
+          payload: {
+            loading: false,
+            loadError: "States are not currently supported",
+          },
+        });
+        return;
+      }
       const projection = store.selectMapMap().getView().getProjection();
 
       // Cancel any query already in flight so its response can't land after a
@@ -322,6 +336,16 @@ export default {
         const source = layer.getSource();
         source.clear();
         source.addFeatures([...byId.values()]);
+        // Zoom to the returned features, mirroring the shapefile-import fit but
+        // pulled back ~15% so the features don't hug the edges of the viewport.
+        if (byId.size > 0) {
+          const extent = source.getExtent();
+          const pad = Math.max(getWidth(extent), getHeight(extent)) * 0.15;
+          store.selectMapMap().getView().fit(buffer(extent, pad), {
+            padding: [40, 40, 40, 40],
+            duration: 300,
+          });
+        }
         dispatch({
           type: actions.LOAD_FINISHED,
           payload: { loading: false, featureCount: byId.size },

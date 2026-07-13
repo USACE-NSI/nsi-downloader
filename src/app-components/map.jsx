@@ -96,13 +96,6 @@ export function Map() {
       onDrop={handleDrop}
     >
       <div ref={el} className="absolute inset-0" />
-      {dragging && (
-        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center border-2 border-dashed border-blue-400 bg-blue-500/10">
-          <span className="rounded-md bg-blue-600/90 px-4 py-2 text-sm font-medium text-white">
-            Drop a zipped shapefile (.zip) to add a query area
-          </span>
-        </div>
-      )}
       <div ref={popupRef}>
         {nsiClickInfo && (
           <div className="min-w-[190px] overflow-hidden rounded-md border border-gray-600 bg-[#222] text-xs text-white shadow-lg">
@@ -127,6 +120,9 @@ export function Map() {
                     label: "State",
                     name: nsiClickInfo.stateName,
                     code: nsiClickInfo.stateFips,
+                    // State-level queries aren't scalable yet, so show the row
+                    // but don't let the user run one from it.
+                    disabled: true,
                   },
                   {
                     label: "County",
@@ -138,24 +134,54 @@ export function Map() {
                   { label: "Block", code: nsiClickInfo.blockFips },
                 ]
                   .filter((o) => o.code)
-                  .map((o) => (
-                    <button
-                      key={o.label}
-                      onClick={() => pickFips(o.code)}
-                      className="flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left hover:bg-gray-700"
-                    >
-                      <span>
-                        <span className="text-gray-400">{o.label}: </span>
-                        {o.name ?? ""}
-                      </span>
-                      <span className="font-mono text-gray-400">{o.code}</span>
-                    </button>
-                  ))}
+                  .map((o) =>
+                    o.disabled ? (
+                      <div
+                        key={o.label}
+                        title="State-level FIPS queries are not currently supported"
+                        className="flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left opacity-50 cursor-not-allowed"
+                      >
+                        <span>
+                          <span className="text-gray-400">{o.label}: </span>
+                          {o.name ?? ""}
+                        </span>
+                        <span className="font-mono text-gray-400">
+                          {o.code}
+                        </span>
+                      </div>
+                    ) : (
+                      <button
+                        key={o.label}
+                        onClick={() => pickFips(o.code)}
+                        className="flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left hover:bg-gray-700"
+                      >
+                        <span>
+                          <span className="text-gray-400">{o.label}: </span>
+                          {o.name ?? ""}
+                        </span>
+                        <span className="font-mono text-gray-400">
+                          {o.code}
+                        </span>
+                      </button>
+                    ),
+                  )}
               </div>
             )}
           </div>
         )}
       </div>
+      {/* Must stay AFTER the OpenLayers-managed popup div: OL relocates that
+          node out of this container, so a dynamically-toggled sibling inserted
+          before it makes React's insertBefore target a non-child node and crash
+          ("Failed to execute 'insertBefore'"). Rendering it last means React
+          appends instead. */}
+      {dragging && (
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center border-2 border-dashed border-blue-400 bg-blue-500/10">
+          <span className="rounded-md bg-blue-600/90 px-4 py-2 text-sm font-medium text-white">
+            Drop a zipped shapefile (.zip) to add a query area
+          </span>
+        </div>
+      )}
     </div>
   );
 }
