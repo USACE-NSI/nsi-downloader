@@ -10,6 +10,20 @@ import { actions as mapActions } from "./map-bundle.js";
 
 const geojsonFormat = new GeoJSON();
 
+// Interactions for the active draw session, held at module scope so leaving
+// polygon mode or clearing can tear them down mid-draw. drawend clears them on
+// the normal completion path.
+let activeInteractions = null;
+
+function removeDrawInteractions(map) {
+  if (map && activeInteractions) {
+    map.removeInteraction(activeInteractions.draw);
+    map.removeInteraction(activeInteractions.mod);
+    map.removeInteraction(activeInteractions.snap);
+  }
+  activeInteractions = null;
+}
+
 export const actions = {
   INITIALIZED_START: "DRAW_INITIALIZED_START",
   INITIALIZED: "DRAW_INITIALIZED",
@@ -82,15 +96,14 @@ export default {
       map.addInteraction(draw);
       map.addInteraction(mod);
       map.addInteraction(snap);
+      activeInteractions = { draw, mod, snap };
       draw.on("drawend", (e) => {
         const coords = e.feature.getGeometry().getCoordinates()[0];
         const bbox = coords
           .map((coord) => toLonLat(coord))
           .map(([lon, lat]) => `${lon},${lat}`)
           .join(",");
-        map.removeInteraction(draw);
-        map.removeInteraction(mod);
-        map.removeInteraction(snap);
+        removeDrawInteractions(map);
         store.doNsiAddBbox([bbox]);
         dispatch({ type: actions.FINISHED, payload: { drawing: false } });
       });
@@ -118,11 +131,21 @@ export default {
   doDrawClear: () => {
     return ({ store, dispatch }) => {
       const polySource = store.selectDrawSource();
+      // Cancel an in-progress draw so Clear doesn't leave the user still drawing.
+      removeDrawInteractions(store.selectMapMap());
       if (polySource) polySource.clear();
       dispatch({
         type: actions.CLEARED,
         payload: { drawing: false },
       });
+    };
+  },
+  // End an in-progress draw session without clearing already-committed polygons.
+  // Used when leaving polygon mode mid-draw.
+  doDrawStop: () => {
+    return ({ store, dispatch }) => {
+      removeDrawInteractions(store.selectMapMap());
+      dispatch({ type: actions.FINISHED, payload: { drawing: false } });
     };
   },
   doDrawSetVisible: (visible) => {

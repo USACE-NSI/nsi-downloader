@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useConnect } from "redux-bundler-hook";
 import { ShapezipUpload } from "./shapezip-upload";
 
@@ -54,6 +55,7 @@ export function QueryToolbar() {
     nsiLoadError,
     sidePanelComputing,
     doDrawStart,
+    doDrawStop,
     doDrawClear,
     doDrawSetVisible,
     doNsiSetQueryType,
@@ -70,6 +72,7 @@ export function QueryToolbar() {
     "selectNsiLoadError",
     "selectSidePanelComputing",
     "doDrawStart",
+    "doDrawStop",
     "doDrawClear",
     "doDrawSetVisible",
     "doNsiSetQueryType",
@@ -77,6 +80,17 @@ export function QueryToolbar() {
     "doNsiClear",
     "doNsiRefresh",
   );
+
+  // Let Escape cancel an in-progress draw (discards the sketch, keeps committed
+  // polygons). Only listen while actually drawing.
+  useEffect(() => {
+    if (!drawDrawing) return undefined;
+    const onKey = (e) => {
+      if (e.key === "Escape") doDrawStop();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [drawDrawing, doDrawStop]);
 
   const isFips = nsiQueryType === "fips";
   const hasQuery = isFips ? nsiFips.trim().length > 0 : nsiBbox.length > 0;
@@ -132,6 +146,15 @@ export function QueryToolbar() {
           >
             {drawDrawing ? "Drawing…" : "Draw Polygon"}
           </ToolbarButton>
+          {drawDrawing && (
+            <ToolbarButton
+              onClick={() => doDrawStop()}
+              variant="danger"
+              title="Discard the polygon you're drawing (Esc) — keeps existing query areas"
+            >
+              Cancel
+            </ToolbarButton>
+          )}
           <ShapezipUpload />
           <label
             className="flex items-center gap-1.5 text-xs text-gray-300 cursor-pointer select-none"

@@ -130,6 +130,9 @@ export default {
   doNsiSetQueryType: (queryType) => {
     return ({ store, dispatch }) => {
       dispatch({ type: actions.QUERY_TYPE_SET, payload: { queryType } });
+      // Leaving polygon mode mid-draw would otherwise leave the draw interaction
+      // live on the map, so cancel any active draw session.
+      if (queryType !== "polygon") store.doDrawStop();
       // Hide the drawn polygons outside polygon mode without destroying them;
       // restore the user's show/hide preference when back in polygon mode.
       const layer = store.selectDrawLayer();
