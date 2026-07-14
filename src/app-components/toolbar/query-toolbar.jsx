@@ -1,6 +1,16 @@
 import { useEffect } from "react";
 import { useConnect } from "redux-bundler-hook";
+import { Button } from "@usace/groundwork";
 import { ShapezipUpload } from "./shapezip-upload";
+
+// Map our toolbar variants onto Groundwork's filled Button colors. Filled
+// colors are solid bg + white text, which read well on the dark toolbar.
+const VARIANT_COLOR = {
+  default: "zinc",
+  primary: "blue",
+  danger: "red",
+  mock: "zinc",
+};
 
 export function ToolbarButton({
   onClick,
@@ -9,23 +19,16 @@ export function ToolbarButton({
   variant = "default",
   children,
 }) {
-  const base =
-    "px-3 py-1.5 rounded text-sm font-medium transition border border-transparent disabled:cursor-not-allowed";
-  const variants = {
-    default: "bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50",
-    primary: "bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50",
-    danger: "bg-red-600 text-white hover:bg-red-500 disabled:opacity-40",
-    mock: "bg-gray-700 text-gray-400 border border-dashed border-gray-500 opacity-70",
-  };
   return (
-    <button
+    <Button
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className={`${base} ${variants[variant]}`}
+      color={VARIANT_COLOR[variant] ?? "zinc"}
+      size="sm"
     >
       {children}
-    </button>
+    </Button>
   );
 }
 

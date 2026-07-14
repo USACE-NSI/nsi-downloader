@@ -4,7 +4,6 @@ import { SidePanel } from "./app-components/side-panel/side-panel.jsx";
 import { QueryToolbar } from "./app-components/toolbar/query-toolbar.jsx";
 import { DownloaderPage } from "./app-components/downloader-page.jsx";
 import { SiteWrapper } from "@usace/groundwork";
-import "@usace/groundwork/dist/groundwork.css";
 
 function App() {
   return (
