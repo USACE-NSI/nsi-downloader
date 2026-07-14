@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+/* Groundwork's <SiteWrapper> renders a `min-h-[100vh]` grid meant for
+   document-flow pages. For a full-screen map, cap the shell to the viewport
+   and make the content region a flex column so DownloaderPage fills the space
+   below the banner + nav instead of overflowing and scrolling the page. */
+#root > .gw-grid {
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+}
+#root > .gw-grid > div:first-child {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .scrollbar-dark::-webkit-scrollbar-track {
   background: transparent;
 }
