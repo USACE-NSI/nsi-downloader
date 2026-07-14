@@ -21,8 +21,8 @@ function ColorDot({ color, size = 12 }) {
 function StatRow({ label, value }) {
   return (
     <div className="flex justify-between gap-2 text-sm">
-      <span className="text-gray-400">{label}</span>
-      <span className="text-white font-mono">{value}</span>
+      <span className="text-gray-600">{label}</span>
+      <span className="text-gray-900 font-mono">{value}</span>
     </div>
   );
 }
@@ -30,11 +30,11 @@ function StatRow({ label, value }) {
 function GradientRow({ color, label, value }) {
   return (
     <div className="flex items-center justify-between gap-2 text-sm">
-      <span className="flex items-center gap-2 text-gray-400">
+      <span className="flex items-center gap-2 text-gray-600">
         <ColorDot color={color} />
         {label}
       </span>
-      <span className="text-white font-mono">{value}</span>
+      <span className="text-gray-900 font-mono">{value}</span>
     </div>
   );
 }
@@ -52,7 +52,7 @@ function NumericStats({ stats, scheme }) {
       {scheme?.gradientStops && (
         <div className="flex flex-col gap-1">
           <div className="flex items-baseline justify-between">
-            <span className="text-sm text-gray-400">Gradient</span>
+            <span className="text-sm text-gray-600">Gradient</span>
             {scheme.scaleLabel && (
               <span className="text-xs text-gray-500 italic">
                 {scheme.scaleLabel}
@@ -89,7 +89,7 @@ function StringStats({ stats, scheme }) {
         />
       </div>
       <div className="flex flex-col gap-1">
-        <div className="text-sm text-gray-400">Values</div>
+        <div className="text-sm text-gray-600">Values</div>
         <div className="flex flex-col gap-0.5 max-h-36 overflow-y-auto pr-3 pl-1 scrollbar-dark">
           {sorted.map(({ value, count }) => (
             <div
@@ -100,7 +100,7 @@ function StringStats({ stats, scheme }) {
                 {colorFor && <ColorDot color={colorFor(value)} size={10} />}
                 <span className="truncate">{value}</span>
               </span>
-              <span className="text-gray-400">{formatNumber(count)}</span>
+              <span className="text-gray-600">{formatNumber(count)}</span>
             </div>
           ))}
         </div>
@@ -132,7 +132,7 @@ export function StatsDisplay() {
 
   if (!stats) {
     return (
-      <div className="flex items-center gap-2 p-3 rounded-md bg-gray-800/60 text-sm text-gray-400 italic">
+      <div className="flex items-center gap-2 p-3 rounded-md bg-white border border-gray-300 text-sm text-gray-600 italic">
         <span className="inline-block w-3 h-3 rounded-full border-2 border-gray-400 border-t-transparent animate-spin" />
         {sidePanelComputing ? "Computing stats…" : "Waiting…"}
       </div>
@@ -145,13 +145,13 @@ export function StatsDisplay() {
       : null;
 
   return (
-    <div className="flex flex-col gap-2 p-3 rounded-md bg-gray-800/60">
+    <div className="flex flex-col gap-2 p-3 rounded-md bg-white border border-gray-300">
       {stats.kind === "numeric" && (
         <NumericStats stats={stats} scheme={scheme} />
       )}
       {stats.kind === "string" && <StringStats stats={stats} scheme={scheme} />}
       {stats.kind === "empty" && (
-        <div className="text-sm text-gray-400 italic">No values</div>
+        <div className="text-sm text-gray-600 italic">No values</div>
       )}
     </div>
   );

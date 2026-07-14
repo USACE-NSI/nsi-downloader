@@ -27,12 +27,12 @@ export function FeatureDetails() {
   const keys = Object.keys(selectionProperties).sort();
 
   return (
-    <div className="flex flex-col gap-2 p-3 rounded-md bg-gray-800/60">
+    <div className="flex flex-col gap-2 p-3 rounded-md bg-white border border-gray-300">
       <div className="flex items-baseline justify-between">
-        <div className="text-sm text-gray-400">Feature</div>
+        <div className="text-sm text-gray-600">Feature</div>
         <button
           onClick={doSelectionClear}
-          className="text-xs text-gray-500 hover:text-gray-300"
+          className="text-xs text-gray-500 hover:text-gray-800"
         >
           clear
         </button>
@@ -44,11 +44,11 @@ export function FeatureDetails() {
             <div
               key={key}
               className={`flex justify-between gap-2 text-xs px-2 py-0.5 rounded ${
-                isHighlighted ? "bg-white/10" : ""
+                isHighlighted ? "bg-blue-50" : ""
               }`}
             >
-              <span className="text-gray-400">{key}</span>
-              <span className="text-white font-mono truncate">
+              <span className="text-gray-600">{key}</span>
+              <span className="text-gray-900 font-mono truncate">
                 {formatValue(selectionProperties[key])}
               </span>
             </div>

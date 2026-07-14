@@ -12,9 +12,8 @@ export function DownloadGeoJSONButton({ filename = "data.geojson" }) {
     <Button
       onClick={() => doNsiDownload(filename)}
       disabled={!nsiFeatureCount}
-      color="zinc"
+      color="green"
       size="sm"
-      className="w-full"
     >
       <FaDownload />
       <span>Download GeoJSON</span>

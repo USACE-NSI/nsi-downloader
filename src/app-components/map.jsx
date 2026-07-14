@@ -98,21 +98,21 @@ export function Map() {
       <div ref={el} className="absolute inset-0" />
       <div ref={popupRef}>
         {nsiClickInfo && (
-          <div className="min-w-[190px] overflow-hidden rounded-md border border-gray-600 bg-[#222] text-xs text-white shadow-lg">
-            <div className="flex items-center justify-between border-b border-gray-700 bg-[#2a2a2a] px-2 py-1.5">
-              <span className="text-[10px] uppercase tracking-wider text-gray-400">
+          <div className="min-w-[190px] overflow-hidden rounded-md border border-gray-300 bg-white text-xs text-gray-900 shadow-lg">
+            <div className="flex items-center justify-between border-b border-gray-200 bg-gray-100 px-2 py-1.5">
+              <span className="text-[10px] uppercase tracking-wider text-gray-600">
                 Select area
               </span>
               <button
                 onClick={() => doNsiClearClick()}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-500 hover:text-gray-900"
                 title="Dismiss"
               >
                 ✕
               </button>
             </div>
             {nsiClickLoading ? (
-              <div className="px-3 py-2 text-gray-400">Looking up…</div>
+              <div className="px-3 py-2 text-gray-600">Looking up…</div>
             ) : (
               <div className="py-1">
                 {[
@@ -142,10 +142,10 @@ export function Map() {
                         className="flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left opacity-50 cursor-not-allowed"
                       >
                         <span>
-                          <span className="text-gray-400">{o.label}: </span>
+                          <span className="text-gray-600">{o.label}: </span>
                           {o.name ?? ""}
                         </span>
-                        <span className="font-mono text-gray-400">
+                        <span className="font-mono text-gray-600">
                           {o.code}
                         </span>
                       </div>
@@ -153,13 +153,13 @@ export function Map() {
                       <button
                         key={o.label}
                         onClick={() => pickFips(o.code)}
-                        className="flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left hover:bg-gray-700"
+                        className="flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left hover:bg-gray-100"
                       >
                         <span>
-                          <span className="text-gray-400">{o.label}: </span>
+                          <span className="text-gray-600">{o.label}: </span>
                           {o.name ?? ""}
                         </span>
-                        <span className="font-mono text-gray-400">
+                        <span className="font-mono text-gray-600">
                           {o.code}
                         </span>
                       </button>

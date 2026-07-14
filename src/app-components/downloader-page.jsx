@@ -31,10 +31,10 @@ export function DownloaderPage() {
   }, [isResizing]);
 
   return (
-    <div className="flex flex-1 min-h-0 w-full bg-[#1A1A1A]">
+    <div className="flex flex-1 min-h-0 w-full bg-[#fcfafa]">
       <div
         style={{ width: `${trayWidth}px`, position: "relative" }}
-        className="flex-none border-r border-gray-700"
+        className="flex-none border-r border-gray-300"
       >
         <SidePanel />
         <div
