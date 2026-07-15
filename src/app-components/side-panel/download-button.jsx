@@ -2,7 +2,7 @@ import { useConnect } from "redux-bundler-hook";
 import { FaDownload } from "react-icons/fa6";
 import { Button } from "@usace/groundwork";
 
-export function DownloadGeoJSONButton({ filename = "data.geojson" }) {
+export function DownloadGeoJSONButton({ filename = "nsi-data.geojson" }) {
   const { nsiFeatureCount, doNsiDownload } = useConnect(
     "selectNsiFeatureCount",
     "doNsiDownload",

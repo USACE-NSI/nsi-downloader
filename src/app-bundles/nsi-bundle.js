@@ -51,6 +51,7 @@ export const actions = {
   LOAD_STARTED: "NSI_LOAD_STARTED",
   LOAD_FINISHED: "NSI_LOAD_FINISHED",
   LOAD_ERRORED: "NSI_LOAD_ERRORED",
+  ERROR_DISMISSED: "NSI_ERROR_DISMISSED",
   BBOX_ADD: "NSI_BBOX_ADD",
   QUERY_TYPE_SET: "NSI_QUERY_TYPE_SET",
   FIPS_SET: "NSI_FIPS_SET",
@@ -112,6 +113,8 @@ export default {
         case actions.LOAD_ERRORED:
         case actions.CLEARED:
           return { ...state, ...payload };
+        case actions.ERROR_DISMISSED:
+          return { ...state, loadError: null };
         default:
           return state;
       }
@@ -127,6 +130,7 @@ export default {
   selectNsiLoading: (state) => state.nsi.loading,
   selectNsiLoadError: (state) => state.nsi.loadError,
   doNsiAddBbox: (rings) => ({ type: actions.BBOX_ADD, payload: { rings } }),
+  doNsiDismissError: () => ({ type: actions.ERROR_DISMISSED }),
   doNsiSetQueryType: (queryType) => {
     return ({ store, dispatch }) => {
       dispatch({ type: actions.QUERY_TYPE_SET, payload: { queryType } });

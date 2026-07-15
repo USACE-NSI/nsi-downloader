@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ErrorModal } from "./error-modal.jsx";
 import { Map } from "./map.jsx";
 import { SidePanel } from "./side-panel/side-panel.jsx";
 import { QueryToolbar } from "./toolbar/query-toolbar.jsx";
@@ -32,6 +33,7 @@ export function DownloaderPage() {
 
   return (
     <div className="flex flex-1 min-h-0 w-full bg-[#fcfafa]">
+      <ErrorModal />
       <div
         style={{ width: `${trayWidth}px`, position: "relative" }}
         className="flex-none border-r border-gray-300"

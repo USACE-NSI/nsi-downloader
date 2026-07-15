@@ -56,7 +56,6 @@ export function QueryToolbar() {
     drawDrawing,
     drawVisible,
     nsiLoading,
-    nsiLoadError,
     sidePanelComputing,
     doDrawStart,
     doDrawStop,
@@ -73,7 +72,6 @@ export function QueryToolbar() {
     "selectDrawDrawing",
     "selectDrawVisible",
     "selectNsiLoading",
-    "selectNsiLoadError",
     "selectSidePanelComputing",
     "doDrawStart",
     "doDrawStop",
@@ -179,14 +177,6 @@ export function QueryToolbar() {
         <span className="flex items-center gap-2 text-xs text-blue-600">
           <span className="inline-block w-3 h-3 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
           {status}
-        </span>
-      )}
-      {!status && nsiLoadError && (
-        <span className="text-xs text-red-600">{nsiLoadError}</span>
-      )}
-      {!status && !nsiLoadError && !isFips && hasQuery && (
-        <span className="text-xs text-gray-500 font-mono truncate max-w-[24ch]">
-          {nsiBbox[0]}
         </span>
       )}
       <ToolbarButton
