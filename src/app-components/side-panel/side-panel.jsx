@@ -1,4 +1,5 @@
 import { useConnect } from "redux-bundler-hook";
+import { ColorLegend } from "./color-legend.jsx";
 import { StatsDisplay } from "./stats-display.jsx";
 import { FeatureDetails } from "./feature-details.jsx";
 
@@ -42,6 +43,7 @@ export function SidePanel() {
             ))}
           </select>
         </div>
+        <ColorLegend />
         <StatsDisplay />
         <FeatureDetails />
       </div>

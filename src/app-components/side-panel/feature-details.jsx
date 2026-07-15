@@ -1,4 +1,5 @@
 import { useConnect } from "redux-bundler-hook";
+import { CollapsibleSection } from "./collapsible-section.jsx";
 
 function formatValue(v) {
   if (v === null || v === undefined || v === "") return "—";
@@ -27,16 +28,17 @@ export function FeatureDetails() {
   const keys = Object.keys(selectionProperties).sort();
 
   return (
-    <div className="flex flex-col gap-2 p-3 rounded-md bg-white border border-gray-300">
-      <div className="flex items-baseline justify-between">
-        <div className="text-sm text-gray-600">Feature</div>
+    <CollapsibleSection
+      title="Structure Properties"
+      action={
         <button
           onClick={doSelectionClear}
           className="text-xs text-gray-500 hover:text-gray-800"
         >
           clear
         </button>
-      </div>
+      }
+    >
       <div className="flex flex-col gap-0.5">
         {keys.map((key) => {
           const isHighlighted = key === sidePanelSelectedProperty;
@@ -55,6 +57,6 @@ export function FeatureDetails() {
           );
         })}
       </div>
-    </div>
+    </CollapsibleSection>
   );
 }

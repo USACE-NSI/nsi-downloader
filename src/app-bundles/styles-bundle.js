@@ -7,6 +7,9 @@ import { actions as selectionActions } from "./selection-bundle.js";
 import { actions as nsiActions } from "./nsi-bundle.js";
 
 const FALLBACK_COLOR = "#888888";
+// Ordered by distinctness: the most-common categories get the boldest, most
+// separable hues. Nothing here may collide with FALLBACK_COLOR, or the legend
+// cannot tell a palette color from an overflow category.
 const DISCRETE_PALETTE = [
   "#2d96ff",
   "#09e40f",
@@ -18,6 +21,26 @@ const DISCRETE_PALETTE = [
   "#8bc34a",
   "#795548",
   "#9c27b0",
+  "#ffe119",
+  "#469990",
+  "#000075",
+  "#800000",
+  "#f032e6",
+  "#808000",
+  "#dcbeff",
+  "#aaffc3",
+  "#ffd8b1",
+  "#fffac8",
+  "#4363d8",
+  "#1b5e20",
+  "#bfef45",
+  "#ff7f50",
+  "#003f5c",
+  "#b0e0e6",
+  "#66023c",
+  "#2f4f4f",
+  "#d2b48c",
+  "#daa520",
 ];
 const MAX_DISCRETE = DISCRETE_PALETTE.length;
 
