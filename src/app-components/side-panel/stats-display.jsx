@@ -1,4 +1,5 @@
 import { useConnect } from "redux-bundler-hook";
+import { CategoryPie } from "./category-pie.jsx";
 import { CollapsibleSection } from "./collapsible-section.jsx";
 import { formatNumber } from "./format.js";
 
@@ -23,26 +24,34 @@ function NumericStats({ stats }) {
   );
 }
 
-function StringStats({ stats }) {
+function StringStats({ stats, scheme }) {
   return (
-    <div className="flex flex-col gap-1">
-      <StatRow label="Count" value={formatNumber(stats.count)} />
-      <StatRow label="Unique" value={formatNumber(stats.unique)} />
-      <StatRow
-        label="Mode"
-        value={`${stats.mode} (${formatNumber(stats.modeCount)})`}
-      />
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1">
+        <StatRow label="Count" value={formatNumber(stats.count)} />
+        <StatRow label="Unique" value={formatNumber(stats.unique)} />
+        <StatRow
+          label="Mode"
+          value={`${stats.mode} (${formatNumber(stats.modeCount)})`}
+        />
+      </div>
+      {scheme && <CategoryPie stats={stats} scheme={scheme} />}
     </div>
   );
 }
 
 export function StatsDisplay() {
-  const { sidePanelStats, sidePanelSelectedProperty, sidePanelComputing } =
-    useConnect(
-      "selectSidePanelStats",
-      "selectSidePanelSelectedProperty",
-      "selectSidePanelComputing",
-    );
+  const {
+    sidePanelStats,
+    sidePanelSelectedProperty,
+    sidePanelComputing,
+    stylesScheme,
+  } = useConnect(
+    "selectSidePanelStats",
+    "selectSidePanelSelectedProperty",
+    "selectSidePanelComputing",
+    "selectStylesScheme",
+  );
 
   if (!sidePanelSelectedProperty) return null;
   const stats = sidePanelStats[sidePanelSelectedProperty];
@@ -58,10 +67,15 @@ export function StatsDisplay() {
     );
   }
 
+  const scheme =
+    stylesScheme && stylesScheme.property === sidePanelSelectedProperty
+      ? stylesScheme
+      : null;
+
   return (
     <CollapsibleSection title="Statistics">
       {stats.kind === "numeric" && <NumericStats stats={stats} />}
-      {stats.kind === "string" && <StringStats stats={stats} />}
+      {stats.kind === "string" && <StringStats stats={stats} scheme={scheme} />}
       {stats.kind === "empty" && (
         <div className="text-sm text-gray-600 italic">No values</div>
       )}
