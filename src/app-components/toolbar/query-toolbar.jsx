@@ -1,6 +1,17 @@
 import { useEffect } from "react";
 import { useConnect } from "redux-bundler-hook";
+import { Button } from "@usace/groundwork";
 import { ShapezipUpload } from "./shapezip-upload";
+import { DownloadGeoJSONButton } from "../side-panel/download-button.jsx";
+
+// Map our toolbar variants onto Groundwork's filled Button colors. Filled
+// colors are solid bg + white text, which read well on the light toolbar.
+const VARIANT_COLOR = {
+  default: "zinc",
+  primary: "blue",
+  danger: "red",
+  mock: "zinc",
+};
 
 export function ToolbarButton({
   onClick,
@@ -9,23 +20,16 @@ export function ToolbarButton({
   variant = "default",
   children,
 }) {
-  const base =
-    "px-3 py-1.5 rounded text-sm font-medium transition border border-transparent disabled:cursor-not-allowed";
-  const variants = {
-    default: "bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50",
-    primary: "bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50",
-    danger: "bg-red-600 text-white hover:bg-red-500 disabled:opacity-40",
-    mock: "bg-gray-700 text-gray-400 border border-dashed border-gray-500 opacity-70",
-  };
   return (
-    <button
+    <Button
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className={`${base} ${variants[variant]}`}
+      color={VARIANT_COLOR[variant] ?? "zinc"}
+      size="sm"
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -36,7 +40,7 @@ function ModeTab({ active, onClick, children }) {
       className={`px-2.5 py-1 text-xs font-medium transition ${
         active
           ? "bg-blue-600 text-white"
-          : "bg-transparent text-gray-400 hover:text-gray-200"
+          : "bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900"
       }`}
     >
       {children}
@@ -52,7 +56,6 @@ export function QueryToolbar() {
     drawDrawing,
     drawVisible,
     nsiLoading,
-    nsiLoadError,
     sidePanelComputing,
     doDrawStart,
     doDrawStop,
@@ -69,7 +72,6 @@ export function QueryToolbar() {
     "selectDrawDrawing",
     "selectDrawVisible",
     "selectNsiLoading",
-    "selectNsiLoadError",
     "selectSidePanelComputing",
     "doDrawStart",
     "doDrawStop",
@@ -114,8 +116,8 @@ export function QueryToolbar() {
   };
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 bg-[#222] border-b border-gray-700">
-      <div className="flex rounded overflow-hidden border border-gray-600 mr-1">
+    <div className="flex items-center gap-2 px-3 py-2 bg-white border-b border-gray-300">
+      <div className="flex rounded overflow-hidden border border-gray-300 mr-1">
         <ModeTab
           active={!isFips}
           onClick={() => doNsiSetQueryType("polygon")}
@@ -134,7 +136,7 @@ export function QueryToolbar() {
           onKeyDown={(e) => e.key === "Enter" && runQuery()}
           placeholder="FIPS code (e.g. 06, 06075, 06075012405)"
           title="FIPS code: state (2), county (5), tract (11), block group (12), or block (15) digits"
-          className="px-2 py-1.5 rounded text-sm bg-gray-800 text-white border border-gray-600 focus:border-blue-500 focus:outline-none w-72"
+          className="px-2 py-1.5 rounded text-sm bg-white text-gray-900 border border-gray-300 focus:border-blue-500 focus:outline-none w-72"
         />
       ) : (
         <>
@@ -157,7 +159,7 @@ export function QueryToolbar() {
           )}
           <ShapezipUpload />
           <label
-            className="flex items-center gap-1.5 text-xs text-gray-300 cursor-pointer select-none"
+            className="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer select-none"
             title="Show or hide the drawn query polygons on the map"
           >
             <input
@@ -172,17 +174,9 @@ export function QueryToolbar() {
       )}
       <div className="flex-1" />
       {status && (
-        <span className="flex items-center gap-2 text-xs text-blue-300">
-          <span className="inline-block w-3 h-3 rounded-full border-2 border-blue-300 border-t-transparent animate-spin" />
+        <span className="flex items-center gap-2 text-xs text-blue-600">
+          <span className="inline-block w-3 h-3 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
           {status}
-        </span>
-      )}
-      {!status && nsiLoadError && (
-        <span className="text-xs text-red-400">{nsiLoadError}</span>
-      )}
-      {!status && !nsiLoadError && !isFips && hasQuery && (
-        <span className="text-xs text-gray-500 font-mono truncate max-w-[24ch]">
-          {nsiBbox[0]}
         </span>
       )}
       <ToolbarButton
@@ -209,6 +203,7 @@ export function QueryToolbar() {
       >
         Clear
       </ToolbarButton>
+      <DownloadGeoJSONButton />
     </div>
   );
 }

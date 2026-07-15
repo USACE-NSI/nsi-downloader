@@ -1,4 +1,33 @@
+/* Groundwork ships an un-layered Tailwind v3 build containing BOTH its gw-*
+   component styles AND an element-level preflight/forms reset. We slot it into a
+   `groundwork` cascade layer positioned BETWEEN Tailwind's `base` and
+   `utilities` layers (order declared below, before `@import "tailwindcss"`
+   establishes them). This gives us the two properties we need at once:
+     - groundwork > base:      Groundwork's gw-* components beat Tailwind's
+                               preflight, so the header/buttons render correctly.
+     - utilities > groundwork: our Tailwind utilities beat Groundwork's reset, so
+                               native <button>/<select>/<input>/<h*> keep our
+                               styling (e.g. the Polygon/FIPS switcher, dark select).
+   Note: must be the relative node_modules path — Tailwind's CSS resolver rejects
+   the bare specifier (package exports lack a `style` condition). */
+@layer theme, base, components, groundwork, utilities;
 @import "tailwindcss";
+@import "../node_modules/@usace/groundwork/dist/groundwork.css" layer(groundwork);
+
+/* Groundwork's <SiteWrapper> renders a `min-h-[100vh]` grid meant for
+   document-flow pages. For a full-screen map, cap the shell to the viewport
+   and make the content region a flex column so DownloaderPage fills the space
+   below the banner + nav instead of overflowing and scrolling the page. */
+#root > .gw-grid {
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+}
+#root > .gw-grid > div:first-child {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
 
 .scrollbar-dark::-webkit-scrollbar-track {
   background: transparent;
