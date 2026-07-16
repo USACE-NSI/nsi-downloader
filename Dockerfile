@@ -1,21 +1,13 @@
-# Use a specific Node version for consistency
-FROM node:20-alpine
- 
-# Set the working directory inside the container
+# ---- build ----
+FROM node:20-alpine AS build
 WORKDIR /app
- 
-# Copy package files first to leverage Docker's layer caching
-# This ensures 'npm install' only runs when dependencies change
 COPY package*.json ./
- 
-# Install dependencies
-RUN  npm install --legacy-peer-deps
- 
-# Copy the rest of your application code
+RUN npm ci --legacy-peer-deps
 COPY . .
- 
-# Expose Vite's default port
-EXPOSE 5173
- 
-# Start the dev server with --host to allow external access
-CMD ["npm", "run", "dev", "--", "--host"]
+RUN npm run build            # outputs /app/dist
+
+# ---- serve (non-root, port 8080) ----
+FROM nginxinc/nginx-unprivileged:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 8080
