@@ -2,9 +2,10 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --legacy-peer-deps
+RUN  npm install --legacy-peer-deps
 COPY . .
-RUN npm run build            # outputs /app/dist
+RUN npm run build 
+# outputs /app/dist
 
 # ---- serve (non-root, port 8080) ----
 FROM nginxinc/nginx-unprivileged:alpine
