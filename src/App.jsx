@@ -7,7 +7,13 @@ import { SiteWrapper } from "@usace/groundwork";
 
 function App() {
   return (
-    <SiteWrapper fluidNav showFooter={false} subtitle="NSI Downloader Tool">
+    <SiteWrapper 
+      fluidNav={true}
+      showFooter={false}
+      subtitle="NSI Downloader Tool"
+      usaBanner={false}
+      msgBanner={false}
+      missionText="To facilitate simplified user access to structure inventory data nation-wide.">
       <DownloaderPage />
     </SiteWrapper>
   );
