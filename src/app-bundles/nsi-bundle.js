@@ -13,7 +13,7 @@ import { actions as drawActions } from "./draw-bundle.js";
 
 // Polygons go in a POSTed GeoJSON body, not the URL: dense shapefile rings
 // overflow the request line on a GET and the API rejects them with HTTP 431.
-const NSI_URL = "/api/structures?fmt=fc";
+//const NSI_URL = "/api/structures?fmt=fc";
 
 // Rebuild a GeoJSON polygon from a "lon,lat,lon,lat,…" ring string.
 function ringToFeatureCollection(ring) {
@@ -54,6 +54,7 @@ export const actions = {
   ERROR_DISMISSED: "NSI_ERROR_DISMISSED",
   BBOX_ADD: "NSI_BBOX_ADD",
   QUERY_TYPE_SET: "NSI_QUERY_TYPE_SET",
+  QUERY_VERSION_SET: "NSI_QUERY_VERSION_SET",
   FIPS_SET: "NSI_FIPS_SET",
   CLICK_SET: "NSI_CLICK_SET",
   CLEARED: "NSI_CLEARED",
@@ -76,6 +77,7 @@ export default {
       // "polygon" queries POST drawn/uploaded rings; "fips" GETs by state or
       // county FIPS code (2-digit = state, 5-digit = county).
       queryType: "polygon",
+      queryVersion: "nsi2026",
       bbox: [],
       fips: "",
       // Popup shown after a map click in FIPS mode: the clicked coordinate plus
@@ -100,6 +102,8 @@ export default {
             clickInfo: null,
             clickLoading: false,
           };
+        case actions.QUERY_VERSION_SET:
+          return {...state, queryVersion: payload.queryVersion };
         case actions.FIPS_SET:
           return { ...state, fips: payload.fips };
         case actions.CLICK_SET:
@@ -123,6 +127,7 @@ export default {
   selectNsiLayer: (state) => state.nsi.layer,
   selectNsiBbox: (state) => state.nsi.bbox,
   selectNsiQueryType: (state) => state.nsi.queryType,
+  selectNsiQueryVersion: (state) => state.nsi.queryVersion,
   selectNsiFips: (state) => state.nsi.fips,
   selectNsiClickInfo: (state) => state.nsi.clickInfo,
   selectNsiClickLoading: (state) => state.nsi.clickLoading,
@@ -143,6 +148,11 @@ export default {
       if (layer) {
         layer.setVisible(queryType === "polygon" && store.selectDrawVisible());
       }
+    };
+  },
+  doNsiSetQueryVersion: (queryVersion) => {
+    return ({ store, dispatch }) => {
+      dispatch({ type: actions.QUERY_VERSION_SET, payload: { queryVersion } });
     };
   },
   doNsiSetFips: (fips) => ({ type: actions.FIPS_SET, payload: { fips } }),
@@ -277,6 +287,7 @@ export default {
       const queryType = store.selectNsiQueryType();
       const bbox = store.selectNsiBbox();
       const fips = store.selectNsiFips().trim();
+      const version = store.selectNsiQueryVersion();
       // Nothing to query yet for the active mode.
       if (queryType === "fips" ? !fips : !bbox.length) return;
 
@@ -310,7 +321,7 @@ export default {
         if (queryType === "fips") {
           // FIPS is short enough to pass in the URL, so a plain GET is fine.
           const res = await fetch(
-            `${NSI_URL}&fips=${encodeURIComponent(fips)}`,
+            `/api/${version}/structures?fmt=fc&fips=${encodeURIComponent(fips)}`,
             { signal },
           );
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -318,7 +329,7 @@ export default {
         } else {
           responseGeojsons = await Promise.all(
             bbox.map(async (ring) => {
-              const res = await fetch(NSI_URL, {
+              const res = await fetch(`/api/${version}/structures?fmt=fc`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(ringToFeatureCollection(ring)),
