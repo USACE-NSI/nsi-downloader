@@ -1,6 +1,7 @@
 import { useConnect } from "redux-bundler-hook";
 import { useEffect, useRef, useState } from "react";
 import Overlay from "ol/Overlay";
+import BasemapSwitcher from "./basemap-switcher.jsx";
 import "ol/ol.css";
 
 export function Map() {
@@ -26,8 +27,6 @@ export function Map() {
   const el = useRef();
   const popupRef = useRef();
   const overlayRef = useRef();
-  // Drag events fire per child element, so count enters/leaves to avoid flicker
-  // useRef instead of useState because we do not want to cause rerenders when this changes
   const dragDepth = useRef(0);
   const [dragging, setDragging] = useState(false);
 
@@ -36,8 +35,6 @@ export function Map() {
     doMapInitialize(el.current);
   }, [el.current]);
 
-  // Anchor the click popup to the map once both exist. stopEvent keeps clicks
-  // inside the popup from re-triggering the map's singleclick handler.
   useEffect(() => {
     if (!mapMap || !popupRef.current || overlayRef.current) return;
     const overlay = new Overlay({
@@ -50,7 +47,6 @@ export function Map() {
     overlayRef.current = overlay;
   }, [mapMap]);
 
-  // Move the popup to the clicked coordinate, or hide it when there is none.
   useEffect(() => {
     if (overlayRef.current) {
       overlayRef.current.setPosition(nsiClickInfo?.coordinate);
@@ -58,8 +54,6 @@ export function Map() {
   }, [nsiClickInfo]);
 
   const pickFips = (code) => {
-    // Fill the FIPS box, dismiss the popup, and run the query in one click.
-    // doNsiSetFips dispatches synchronously, so doNsiRefresh reads the new code.
     doNsiSetFips(code);
     doNsiClearClick();
     doNsiRefresh();
@@ -67,12 +61,10 @@ export function Map() {
 
   const handleDragEnter = (e) => {
     e.preventDefault();
-    // entering a new element
     dragDepth.current += 1;
     setDragging(true);
   };
   const handleDragLeave = () => {
-    // leaving current element
     dragDepth.current -= 1;
     if (dragDepth.current <= 0) {
       dragDepth.current = 0;
@@ -91,11 +83,12 @@ export function Map() {
     <div
       className="relative h-full w-full"
       onDragEnter={handleDragEnter}
-      onDragOver={(e) => e.preventDefault()} // required to allow a drop
+      onDragOver={(e) => e.preventDefault()}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       <div ref={el} className="absolute inset-0" />
+      <BasemapSwitcher />
       <div ref={popupRef}>
         {nsiClickInfo && (
           <div className="min-w-[190px] overflow-hidden rounded-md border border-gray-300 bg-white text-xs text-gray-900 shadow-lg">
@@ -120,8 +113,6 @@ export function Map() {
                     label: "State",
                     name: nsiClickInfo.stateName,
                     code: nsiClickInfo.stateFips,
-                    // State-level queries aren't scalable yet, so show the row
-                    // but don't let the user run one from it.
                     disabled: true,
                   },
                   {
@@ -170,11 +161,6 @@ export function Map() {
           </div>
         )}
       </div>
-      {/* Must stay AFTER the OpenLayers-managed popup div: OL relocates that
-          node out of this container, so a dynamically-toggled sibling inserted
-          before it makes React's insertBefore target a non-child node and crash
-          ("Failed to execute 'insertBefore'"). Rendering it last means React
-          appends instead. */}
       {dragging && (
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center border-2 border-dashed border-blue-400 bg-blue-500/10">
           <span className="rounded-md bg-blue-600/90 px-4 py-2 text-sm font-medium text-white">
