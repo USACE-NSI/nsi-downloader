@@ -53,6 +53,7 @@ export function QueryToolbar() {
     nsiBbox,
     nsiQueryType,
     nsiFips,
+    nsiQueryVersion,
     drawDrawing,
     drawVisible,
     nsiLoading,
@@ -63,12 +64,14 @@ export function QueryToolbar() {
     doDrawSetVisible,
     doNsiSetQueryType,
     doNsiSetFips,
+    doNsiSetQueryVersion,
     doNsiClear,
     doNsiRefresh,
   } = useConnect(
     "selectNsiBbox",
     "selectNsiQueryType",
     "selectNsiFips",
+    "selectNsiQueryVersion",
     "selectDrawDrawing",
     "selectDrawVisible",
     "selectNsiLoading",
@@ -79,6 +82,7 @@ export function QueryToolbar() {
     "doDrawSetVisible",
     "doNsiSetQueryType",
     "doNsiSetFips",
+    "doNsiSetQueryVersion",
     "doNsiClear",
     "doNsiRefresh",
   );
@@ -179,6 +183,15 @@ export function QueryToolbar() {
           {status}
         </span>
       )}
+      <select
+        value={nsiQueryVersion}
+        onChange={(e) => doNsiSetQueryVersion(e.target.value)}
+        title="Select the NSI data year"
+        className="px-2 py-1.5 rounded text-sm bg-white text-gray-900 border border-gray-300 focus:border-blue-500 focus:outline-none w-24"
+      >
+        <option value="nsi2026">2026</option>
+        <option value="nsi2022">2022</option>
+      </select>
       <ToolbarButton
         onClick={runQuery}
         disabled={!hasQuery || nsiLoading}
