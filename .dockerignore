@@ -1,0 +1,26 @@
+# Installed in-image by `npm install`; sending the host copy is slow and its
+# symlinks (e.g. node_modules/.bin/acorn) break the build context load.
+node_modules
+
+# Build output and local artifacts — not needed inside the image.
+dist
+dist-ssr
+
+# VCS, tooling, and secrets.
+.git
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+.env
+*.local
+
+# Editor/OS noise.
+.vscode
+.devcontainer
+.idea
+.DS_Store
+
+# Logs.
+*.log
+logs
