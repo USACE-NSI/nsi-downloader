@@ -6,7 +6,7 @@
 // presentation only, so the raw name is shown alongside as a tooltip wherever a
 // label replaces it.
 //
-// Covers the nsi2022 (30 fields) and nsi2026 (42 fields) schemas. Fields the
+// Sampled responses: nsi2022 returns 29 fields, nsi2026 returns 42. Fields the
 // API adds later fall through to prettify() rather than showing as identifiers.
 export const PROPERTY_LABELS = {
   // Identity and provenance
@@ -66,6 +66,24 @@ export const PROPERTY_LABELS = {
   creprcnt: "Community Resilience Estimate Percentage",
   crerank: "Community Resilience Estimate Rank",
 };
+
+// Identifiers and coordinates: unique per feature or meaningless to aggregate,
+// so they make useless statistics and unusable map colours. Still listed when
+// inspecting a single feature (FeatureDetails reads selection properties, not
+// this list) — they're just not offered for stats or coloring.
+export const NON_STATISTICAL_FIELDS = new Set([
+  "fd_id",
+  "bid",
+  "usastrucid",
+  "ftprntid",
+  "cbfips",
+  "x",
+  "y",
+]);
+
+export function isStatistical(field) {
+  return !NON_STATISTICAL_FIELDS.has(String(field).toLowerCase());
+}
 
 // Unmapped fields still need to read as words, not identifiers:
 // "some_field" => "Some Field".
