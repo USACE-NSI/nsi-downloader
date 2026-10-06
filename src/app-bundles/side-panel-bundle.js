@@ -1,4 +1,5 @@
 import { actions as nsiActions } from "./nsi-bundle.js";
+import { compareByLabel } from "../property-labels.js";
 
 export const actions = {
   LIST_REQUESTED: "SIDE_PANEL_LIST_REQUESTED",
@@ -68,10 +69,13 @@ function computeStatsForProperty(values) {
 }
 
 // All NSI features share the same schema, so one feature is enough.
+// Ordered as the dropdown shows them: by friendly label, not db field name.
 function extractPropertyNames(features) {
   if (features.length === 0) return [];
   const props = features[0].getProperties();
-  return Object.keys(props).filter((k) => k !== "geometry");
+  return Object.keys(props)
+    .filter((k) => k !== "geometry")
+    .sort(compareByLabel);
 }
 
 export default {
