@@ -32,13 +32,13 @@ export const PROPERTY_LABELS = {
   // Structure characteristics
   occtype: "Occupancy Type",
   bldgtype: "Building Type",
-  st_damcat: "State Damage Category",
+  st_damcat: "Damage Category",
   med_yr_blt: "Median Year Built",
   num_story: "Number of Stories",
   bldheight: "Building Height",
   found_type: "Foundation Type",
   found_ht: "Foundation Height",
-  sqft: "Total Floor Area (sq ft)",
+  sqft: "Square Footage",
   ftprntsqft: "Footprint Area (sq ft)",
 
   // Values
@@ -59,12 +59,12 @@ export const PROPERTY_LABELS = {
 
   // Vehicles
   vehperunit: "Vehicles per Unit",
-  novehprob: "Vehicles Probable",
+  novehprob: "Probability of No Vehicles",
 
   // Indices
-  depindex: "Dependency Index",
-  creprcnt: "CRE Percentage",
-  crerank: "CRE Rank",
+  depindex: "Depreciation Index",
+  creprcnt: "Community Resilience Estimate Percentage",
+  crerank: "Community Resilience Estimate Rank",
 };
 
 // Unmapped fields still need to read as words, not identifiers:
