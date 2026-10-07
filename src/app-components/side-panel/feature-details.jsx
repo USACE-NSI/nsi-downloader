@@ -1,17 +1,7 @@
 import { useConnect } from "redux-bundler-hook";
+import { compareByLabel, propertyLabel } from "../../property-labels.js";
 import { CollapsibleSection } from "./collapsible-section.jsx";
-
-function formatValue(v) {
-  if (v === null || v === undefined || v === "") return "—";
-  if (typeof v === "number") {
-    if (Number.isInteger(v)) return v.toLocaleString();
-    return v.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  }
-  return String(v);
-}
+import { formatValue } from "./format.js";
 
 export function FeatureDetails() {
   const {
@@ -25,7 +15,7 @@ export function FeatureDetails() {
   );
 
   if (!selectionProperties) return null;
-  const keys = Object.keys(selectionProperties).sort();
+  const keys = Object.keys(selectionProperties).sort(compareByLabel);
 
   return (
     <CollapsibleSection
@@ -49,7 +39,9 @@ export function FeatureDetails() {
                 isHighlighted ? "bg-blue-50" : ""
               }`}
             >
-              <span className="text-gray-600">{key}</span>
+              <span className="text-gray-600" title={key}>
+                {propertyLabel(key)}
+              </span>
               <span className="text-gray-900 font-mono truncate">
                 {formatValue(selectionProperties[key])}
               </span>

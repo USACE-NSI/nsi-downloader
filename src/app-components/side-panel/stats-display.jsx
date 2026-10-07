@@ -1,4 +1,5 @@
 import { useConnect } from "redux-bundler-hook";
+import { propertyLabel } from "../../property-labels.js";
 import { CategoryPie } from "./category-pie.jsx";
 import { CollapsibleSection } from "./collapsible-section.jsx";
 import { formatNumber } from "./format.js";
@@ -55,10 +56,13 @@ export function StatsDisplay() {
 
   if (!sidePanelSelectedProperty) return null;
   const stats = sidePanelStats[sidePanelSelectedProperty];
+  // The rows themselves are property-agnostic, so name the section after the
+  // property it charts.
+  const title = `Statistics — ${propertyLabel(sidePanelSelectedProperty)}`;
 
   if (!stats) {
     return (
-      <CollapsibleSection title="Statistics">
+      <CollapsibleSection title={title}>
         <div className="flex items-center gap-2 text-sm text-gray-600 italic">
           <span className="inline-block w-3 h-3 rounded-full border-2 border-gray-400 border-t-transparent animate-spin" />
           {sidePanelComputing ? "Computing stats…" : "Waiting…"}
@@ -73,7 +77,7 @@ export function StatsDisplay() {
       : null;
 
   return (
-    <CollapsibleSection title="Statistics">
+    <CollapsibleSection title={title}>
       {stats.kind === "numeric" && <NumericStats stats={stats} />}
       {stats.kind === "string" && <StringStats stats={stats} scheme={scheme} />}
       {stats.kind === "empty" && (

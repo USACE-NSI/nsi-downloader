@@ -1,4 +1,5 @@
 import { useConnect } from "redux-bundler-hook";
+import { propertyLabel } from "../../property-labels.js";
 import { ColorLegend } from "./color-legend.jsx";
 import { StatsDisplay } from "./stats-display.jsx";
 import { FeatureDetails } from "./feature-details.jsx";
@@ -37,8 +38,10 @@ export function SidePanel() {
           >
             {!hasProperties && <option value="">{placeholder}</option>}
             {sidePanelPropertyNames.map((name) => (
-              <option key={name} value={name}>
-                {name}
+              // value stays the db field name: it keys the stats and colour
+              // scheme, so only the displayed text is friendly.
+              <option key={name} value={name} title={name}>
+                {propertyLabel(name)}
               </option>
             ))}
           </select>

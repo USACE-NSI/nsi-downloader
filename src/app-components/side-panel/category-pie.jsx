@@ -1,4 +1,5 @@
 import { formatNumber, formatPercent } from "./format.js";
+import { propertyLabel } from "../../property-labels.js";
 
 const SIZE = 140;
 const R = 60;
@@ -78,7 +79,7 @@ export function CategoryPie({ stats, scheme }) {
         // dragged narrower than the cap.
         className="w-full max-w-[220px] h-auto"
         role="img"
-        aria-label={`Share of features by ${scheme.property}`}
+        aria-label={`Share of features by ${propertyLabel(scheme.property)}`}
       >
         {wedges.map(({ key, d, color, label, count, pct }) => (
           <path

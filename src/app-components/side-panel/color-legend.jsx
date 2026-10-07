@@ -1,4 +1,5 @@
 import { useConnect } from "redux-bundler-hook";
+import { propertyLabel } from "../../property-labels.js";
 import { CollapsibleSection } from "./collapsible-section.jsx";
 import { formatNumber, formatPercent } from "./format.js";
 
@@ -115,7 +116,9 @@ export function ColorLegend() {
   const stats = sidePanelStats[sidePanelSelectedProperty];
 
   return (
-    <CollapsibleSection title="Legend">
+    <CollapsibleSection
+      title={`Legend — ${propertyLabel(sidePanelSelectedProperty)}`}
+    >
       {stylesScheme.kind === "numeric" && <NumericLegend scheme={stylesScheme} />}
       {stylesScheme.kind === "string" && stats?.kind === "string" && (
         <StringLegend scheme={stylesScheme} stats={stats} />
