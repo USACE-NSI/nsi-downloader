@@ -110,12 +110,6 @@ export function Map() {
               <div className="py-1">
                 {[
                   {
-                    label: "State",
-                    name: nsiClickInfo.stateName,
-                    code: nsiClickInfo.stateFips,
-                    disabled: true,
-                  },
-                  {
                     label: "County",
                     name: nsiClickInfo.countyName,
                     code: nsiClickInfo.countyFips,
@@ -125,37 +119,19 @@ export function Map() {
                   { label: "Block", code: nsiClickInfo.blockFips },
                 ]
                   .filter((o) => o.code)
-                  .map((o) =>
-                    o.disabled ? (
-                      <div
-                        key={o.label}
-                        title="State-level FIPS queries are not currently supported"
-                        className="flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left opacity-50 cursor-not-allowed"
-                      >
-                        <span>
-                          <span className="text-gray-600">{o.label}: </span>
-                          {o.name ?? ""}
-                        </span>
-                        <span className="font-mono text-gray-600">
-                          {o.code}
-                        </span>
-                      </div>
-                    ) : (
-                      <button
-                        key={o.label}
-                        onClick={() => pickFips(o.code)}
-                        className="flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left hover:bg-gray-100"
-                      >
-                        <span>
-                          <span className="text-gray-600">{o.label}: </span>
-                          {o.name ?? ""}
-                        </span>
-                        <span className="font-mono text-gray-600">
-                          {o.code}
-                        </span>
-                      </button>
-                    ),
-                  )}
+                  .map((o) => (
+                    <button
+                      key={o.label}
+                      onClick={() => pickFips(o.code)}
+                      className="flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left hover:bg-gray-100"
+                    >
+                      <span>
+                        <span className="text-gray-600">{o.label}: </span>
+                        {o.name ?? ""}
+                      </span>
+                      <span className="font-mono text-gray-600">{o.code}</span>
+                    </button>
+                  ))}
               </div>
             )}
           </div>
