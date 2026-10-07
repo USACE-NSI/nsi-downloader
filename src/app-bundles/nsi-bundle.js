@@ -63,6 +63,10 @@ export const actions = {
 // FCC block/find reverse-geocodes a lon/lat into State + County FIPS codes.
 const FCC_URL = "/fcc/api/census/block/find?format=json";
 
+// The API supports county (5), tract (11), block group (12) and block (15)
+// digit FIPS codes. State-level (2-digit) queries are no longer supported.
+const FIPS_PATTERN = /^(\d{5}|\d{11}|\d{12}|\d{15})$/;
+
 // The single in-flight structures request, so Clear (or a newer query) can
 // abort it and a stale response can never repopulate the layer after the fact.
 let inflightController = null;
@@ -74,14 +78,14 @@ export default {
       _shouldInit: false,
       _shouldClear: false,
       layer: null,
-      // "polygon" queries POST drawn/uploaded rings; "fips" GETs by state or
-      // county FIPS code (2-digit = state, 5-digit = county).
+      // "polygon" queries POST drawn/uploaded rings; "fips" GETs by county,
+      // tract, block group or block FIPS code.
       queryType: "polygon",
       queryVersion: "nsi2026",
       bbox: [],
       fips: "",
       // Popup shown after a map click in FIPS mode: the clicked coordinate plus
-      // the state/county the FCC lookup resolved it to (null when hidden).
+      // the county/tract/block the FCC lookup resolved it to (null when hidden).
       clickInfo: null,
       clickLoading: false,
       featureCount: 0,
@@ -129,6 +133,7 @@ export default {
   selectNsiQueryType: (state) => state.nsi.queryType,
   selectNsiQueryVersion: (state) => state.nsi.queryVersion,
   selectNsiFips: (state) => state.nsi.fips,
+  selectNsiFipsValid: (state) => FIPS_PATTERN.test(state.nsi.fips.trim()),
   selectNsiClickInfo: (state) => state.nsi.clickInfo,
   selectNsiClickLoading: (state) => state.nsi.clickLoading,
   selectNsiFeatureCount: (state) => state.nsi.featureCount,
@@ -160,8 +165,8 @@ export default {
     type: actions.CLICK_SET,
     payload: { clickInfo: null, clickLoading: false },
   }),
-  // Reverse-geocode a clicked map coordinate (map projection) into state/county
-  // FIPS codes and open the selection popup at that spot.
+  // Reverse-geocode a clicked map coordinate (map projection) into county/tract/
+  // block FIPS codes and open the selection popup at that spot.
   doNsiLookupFips: (coordinate) => {
     return async ({ dispatch }) => {
       const [lon, lat] = toLonLat(coordinate);
@@ -184,7 +189,7 @@ export default {
           return;
         }
         // Block.FIPS is the 15-digit code; the finer levels are prefixes of it.
-        // (state=2, county=5, tract=11, block group=12, block=15)
+        // (county=5, tract=11, block group=12, block=15)
         const block = data.Block?.FIPS;
         dispatch({
           type: actions.CLICK_SET,
@@ -192,8 +197,6 @@ export default {
             clickLoading: false,
             clickInfo: {
               coordinate,
-              stateFips: data.State.FIPS,
-              stateName: data.State.name,
               countyFips: data.County.FIPS,
               countyName: data.County.name,
               tractFips: block ? block.slice(0, 11) : null,
@@ -264,8 +267,8 @@ export default {
         style: defaultStyle,
       });
       map.addLayer(layer);
-      // In FIPS mode a map click reverse-geocodes to a state/county picker.
-      // In polygon mode the draw interactions own clicks, so we no-op.
+      // In FIPS mode a map click reverse-geocodes to a county/tract/block
+      // picker. In polygon mode the draw interactions own clicks, so we no-op.
       map.on("singleclick", (e) => {
         if (store.selectNsiQueryType() !== "fips") return;
         // Clicking a structure selects it (see selection-bundle); only run the
@@ -291,14 +294,17 @@ export default {
       // Nothing to query yet for the active mode.
       if (queryType === "fips" ? !fips : !bbox.length) return;
 
-      // A 2-digit FIPS is a state. State-level queries aren't scalable yet, so
-      // reject them and surface the reason where other load errors show.
-      if (queryType === "fips" && /^\d{2}$/.test(fips)) {
+      // Only county/tract/block-group/block codes are queryable, so reject
+      // anything else (state-level 2-digit codes included) and surface the
+      // reason where other load errors show.
+      if (queryType === "fips" && !FIPS_PATTERN.test(fips)) {
         dispatch({
           type: actions.LOAD_ERRORED,
           payload: {
             loading: false,
-            loadError: "States are not currently supported",
+            loadError:
+              "Enter a valid FIPS code — county (5), tract (11), " +
+              "block group (12), or block (15) digits",
           },
         });
         return;

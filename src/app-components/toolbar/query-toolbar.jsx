@@ -53,6 +53,7 @@ export function QueryToolbar() {
     nsiBbox,
     nsiQueryType,
     nsiFips,
+    nsiFipsValid,
     nsiQueryVersion,
     drawDrawing,
     drawVisible,
@@ -71,6 +72,7 @@ export function QueryToolbar() {
     "selectNsiBbox",
     "selectNsiQueryType",
     "selectNsiFips",
+    "selectNsiFipsValid",
     "selectNsiQueryVersion",
     "selectDrawDrawing",
     "selectDrawVisible",
@@ -99,7 +101,11 @@ export function QueryToolbar() {
   }, [drawDrawing, doDrawStop]);
 
   const isFips = nsiQueryType === "fips";
-  const hasQuery = isFips ? nsiFips.trim().length > 0 : nsiBbox.length > 0;
+  const hasFips = nsiFips.trim().length > 0;
+  // Anything but a county/tract/block-group/block code is unqueryable, so flag
+  // it here instead of letting the request fail at the API.
+  const fipsInvalid = hasFips && !nsiFipsValid;
+  const hasQuery = isFips ? nsiFipsValid : nsiBbox.length > 0;
   const status = nsiLoading
     ? "Fetching features…"
     : sidePanelComputing
@@ -133,15 +139,26 @@ export function QueryToolbar() {
         </ModeTab>
       </div>
       {isFips ? (
-        <input
-          type="text"
-          value={nsiFips}
-          onChange={(e) => doNsiSetFips(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && runQuery()}
-          placeholder="FIPS code (e.g. 06, 06075, 06075012405)"
-          title="FIPS code: state (2), county (5), tract (11), block group (12), or block (15) digits"
-          className="px-2 py-1.5 rounded text-sm bg-white text-gray-900 border border-gray-300 focus:border-blue-500 focus:outline-none w-72"
-        />
+        <>
+          <input
+            type="text"
+            value={nsiFips}
+            onChange={(e) => doNsiSetFips(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && runQuery()}
+            placeholder="FIPS code (e.g. 06075, 06075012405)"
+            title="FIPS code: county (5), tract (11), block group (12), or block (15) digits"
+            className={`px-2 py-1.5 rounded text-sm bg-white text-gray-900 border focus:outline-none w-72 ${
+              fipsInvalid
+                ? "border-red-500 focus:border-red-500"
+                : "border-gray-300 focus:border-blue-500"
+            }`}
+          />
+          {fipsInvalid && (
+            <span className="text-xs text-red-600">
+              Enter a county, tract, block group, or block FIPS code
+            </span>
+          )}
+        </>
       ) : (
         <>
           <ToolbarButton
@@ -206,7 +223,7 @@ export function QueryToolbar() {
       </ToolbarButton>
       <ToolbarButton
         onClick={clearQuery}
-        disabled={!hasQuery && !drawDrawing}
+        disabled={isFips ? !hasFips : !hasQuery && !drawDrawing}
         variant="danger"
         title={
           isFips
