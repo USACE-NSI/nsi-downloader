@@ -1,18 +1,7 @@
 import { useConnect } from "redux-bundler-hook";
 import { compareByLabel, propertyLabel } from "../../property-labels.js";
 import { CollapsibleSection } from "./collapsible-section.jsx";
-
-function formatValue(v) {
-  if (v === null || v === undefined || v === "") return "—";
-  if (typeof v === "number") {
-    if (Number.isInteger(v)) return v.toLocaleString();
-    return v.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  }
-  return String(v);
-}
+import { formatValue } from "./format.js";
 
 export function FeatureDetails() {
   const {

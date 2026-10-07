@@ -1,7 +1,10 @@
 import { useConnect } from "redux-bundler-hook";
 import { useEffect, useRef, useState } from "react";
 import Overlay from "ol/Overlay";
+import { getCenter } from "ol/extent";
 import BasemapSwitcher from "./basemap-switcher.jsx";
+import { propertyLabel } from "../property-labels.js";
+import { formatValue } from "./side-panel/format.js";
 import "ol/ol.css";
 
 export function Map() {
@@ -11,6 +14,10 @@ export function Map() {
     doNsiLoadShapezip,
     nsiClickInfo,
     nsiClickLoading,
+    nsiLoading,
+    selectionHoverFeature,
+    sidePanelSelectedProperty,
+    drawDrawing,
     doNsiSetFips,
     doNsiClearClick,
     doNsiRefresh,
@@ -20,6 +27,10 @@ export function Map() {
     "doNsiLoadShapezip",
     "selectNsiClickInfo",
     "selectNsiClickLoading",
+    "selectNsiLoading",
+    "selectSelectionHoverFeature",
+    "selectSidePanelSelectedProperty",
+    "selectDrawDrawing",
     "doNsiSetFips",
     "doNsiClearClick",
     "doNsiRefresh",
@@ -27,6 +38,8 @@ export function Map() {
   const el = useRef();
   const popupRef = useRef();
   const overlayRef = useRef();
+  const hoverRef = useRef();
+  const hoverOverlayRef = useRef();
   const dragDepth = useRef(0);
   const [dragging, setDragging] = useState(false);
 
@@ -52,6 +65,34 @@ export function Map() {
       overlayRef.current.setPosition(nsiClickInfo?.coordinate);
     }
   }, [nsiClickInfo]);
+
+  useEffect(() => {
+    if (!mapMap || !hoverRef.current || hoverOverlayRef.current) return;
+    // stopEvent false plus a pointer-events-none wrapper is load-bearing: a
+    // tooltip that swallows pointer events cancels the pointermove that produced
+    // it, so it flickers itself out the moment it appears.
+    // Anchored bottom-center so the box hangs over the marker like the FIPS
+    // click popup does: no horizontal offset to occlude a neighbouring point,
+    // and the 4px dot stays visible under the 8px gap.
+    const overlay = new Overlay({
+      element: hoverRef.current,
+      positioning: "bottom-center",
+      offset: [0, -8],
+      stopEvent: false,
+    });
+    mapMap.addOverlay(overlay);
+    hoverOverlayRef.current = overlay;
+  }, [mapMap]);
+
+  // Extent centre rather than raw coordinates: NSI structures are points, but
+  // this stays correct for whatever geometry the layer holds.
+  useEffect(() => {
+    if (!hoverOverlayRef.current) return;
+    const geometry = selectionHoverFeature?.getGeometry();
+    hoverOverlayRef.current.setPosition(
+      geometry ? getCenter(geometry.getExtent()) : undefined,
+    );
+  }, [selectionHoverFeature]);
 
   const pickFips = (code) => {
     doNsiSetFips(code);
@@ -160,6 +201,28 @@ export function Map() {
             )}
           </div>
         )}
+      </div>
+      <div ref={hoverRef} className="pointer-events-none">
+        {selectionHoverFeature &&
+          sidePanelSelectedProperty &&
+          !drawDrawing &&
+          !nsiLoading && (
+            <div
+              // Decorative mirror of the click panel, which stays the accessible
+              // path — so no live region, and hidden from the a11y tree here.
+              aria-hidden="true"
+              className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900 shadow-lg"
+            >
+              <span className="text-gray-600">
+                {propertyLabel(sidePanelSelectedProperty)}:{" "}
+              </span>
+              <span className="font-mono">
+                {formatValue(
+                  selectionHoverFeature.get(sidePanelSelectedProperty),
+                )}
+              </span>
+            </div>
+          )}
       </div>
       {dragging && (
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center border-2 border-dashed border-blue-400 bg-blue-500/10">
