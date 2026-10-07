@@ -5,6 +5,8 @@ import OSM from "ol/source/OSM.js";
 import XYZ from "ol/source/XYZ.js";
 import TileArcGISRest from "ol/source/TileArcGISRest.js";
 import { fromLonLat } from "ol/proj";
+import { defaults as defaultControls } from "ol/control/defaults.js";
+import ScaleLine from "ol/control/ScaleLine.js";
 
 const actions = {
   INITIALIZED: "MAP_INITIALIZED",
@@ -13,29 +15,31 @@ const actions = {
 
 export const BASEMAP_CONFIG = {
   osm: {
-    label: 'Streets',
-    description: 'OpenStreetMap (ODbL)',
-    type: 'osm',
+    label: "Streets",
+    description: "OpenStreetMap (ODbL)",
+    type: "osm",
   },
   usgs: {
-    label: 'USGS',
-    description: 'USGS National Map imagery (US, max zoom ~16)',
-    type: 'xyz',
-    url: 'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}',
-    attributions: 'Imagery courtesy of the U.S. Geological Survey, The National Map',
+    label: "USGS",
+    description: "USGS National Map imagery (US, max zoom ~16)",
+    type: "xyz",
+    url: "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}",
+    attributions:
+      "Imagery courtesy of the U.S. Geological Survey, The National Map",
     maxZoom: 16,
   },
   naip: {
-    label: 'NAIP',
-    description: 'USDA NAIP imagery (CONUS only)',
-    type: 'arcgisrest',
-    url: 'https://gis.apfo.usda.gov/arcgis/rest/services/NAIP/USDA_CONUS_PRIME/ImageServer',
-    attributions: 'Imagery courtesy of the USDA NAIP / Aerial Photography Field Office',
+    label: "NAIP",
+    description: "USDA NAIP imagery (CONUS only)",
+    type: "arcgisrest",
+    url: "https://gis.apfo.usda.gov/arcgis/rest/services/NAIP/USDA_CONUS_PRIME/ImageServer",
+    attributions:
+      "Imagery courtesy of the USDA NAIP / Aerial Photography Field Office",
   },
   sentinel: {
-    label: 'Sentinel-2',
+    label: "Sentinel-2",
     description: "Sentinel-2 / World Imagery",
-    type: 'xyz',
+    type: "xyz",
     url: "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     maxZoom: 19,
   },
@@ -52,7 +56,11 @@ export default {
     return (state = initialState, { type, payload }) => {
       switch (type) {
         case actions.INITIALIZED:
-          return { ...state, map: payload.map, basemapLayer: payload.basemapLayer };
+          return {
+            ...state,
+            map: payload.map,
+            basemapLayer: payload.basemapLayer,
+          };
         case actions.SET_BASEMAP:
           return { ...state, basemap: payload.basemap };
         default:
@@ -71,6 +79,9 @@ export default {
         const map = new Map({
           layers: [basemapLayer],
           target,
+          controls: defaultControls().extend([
+            new ScaleLine({ units: "us", bar: true, text: true, minWidth: 80 }),
+          ]),
           view: new View({
             center: fromLonLat([-122.4444, 37.7749]),
             zoom: 15,
