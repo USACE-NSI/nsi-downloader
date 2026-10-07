@@ -76,7 +76,6 @@ export const NON_STATISTICAL_FIELDS = new Set([
   "bid",
   "usastrucid",
   "ftprntid",
-  "cbfips",
   "x",
   "y",
 ]);
